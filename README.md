@@ -1,5 +1,7 @@
 # SIDE-lv-conservation
 
+Lean 4 kernel — Mellin factorization and s-darkness of the completed zeta; the step-(9) bridge pinned. PLACE TO STAND programme.
+
 Lean 4 kernel formalizing the Conservation of Spectra content (PLACE TO
 STAND programme, Ch. 13) against Mathlib. Lean v4.29.1, Mathlib pin
 `5e932f9`. Mathlib is the sole dependency.
