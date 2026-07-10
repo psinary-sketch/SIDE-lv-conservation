@@ -32,3 +32,6 @@ open SIDELvConservation
 #print axioms T3.T3a_zeroLoc_is_function_of_Phi
 #print axioms T3.T3b_joint_witness_gives_combinations_exclude
 #print axioms T3.T3_perClass_to_combinations
+-- T3′ (Determination-shared-witness bridge) and T3″ (countermodel), added v0.2.0
+#print axioms T3.T3prime_shared_witness
+#print axioms T3.T3doubleprime_general_commutation_fails
