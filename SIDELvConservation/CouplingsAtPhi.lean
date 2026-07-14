@@ -24,10 +24,17 @@ STATUS AT THIS COMMIT (honest; see the per-class comments):
                                               premise's FIFTH REGISTER — see `C5_output`.
   C₆ holomorphic extension          PROVED   (`C6_holomorphic_extension_at_Phi`, via Mathlib's
                                               `differentiableAt_jacobiTheta₂_snd`)
-  C₇ order-≤1 completed continuation OPEN    (`sorry`; entirety is Mathlib's, the growth bound is not)
+  C₇-ENTIRETY entire completion of the Mellin transform  PROVED (`C7_entirety_at_Phi`, via
+                                              `differentiable_completedZeta₀` + T1)
+  C₇-ORDER    the order-≤1 growth bound       OPEN (`sorry`) — priced: Stirling control of Γ (NOT in
+                                              Mathlib at all) + finite order of ζ in the strip.
+                                              PhragmenLindelof.vertical_strip exists but is a
+                                              maximum principle, not a source of order bounds.
 
-FIVE of the seven couplings are now discharged at the fixed witness Φ (C₁, C₂, C₃, C₅-input, C₆).
-The h1 obligation of `T3prime_shared_witness` is not complete: C₄ is unproved and C₇ is open.
+SIX discharges now stand at the fixed witness Φ: C₁, C₂, C₃, C₅-input, C₆, C₇-entirety.
+The h1 obligation of `T3prime_shared_witness` is NOT complete: `sevenClasses` carries `C7_order`
+(the class's real content), which is open, and C₄ is unproved.  Two classes short, and the file
+says so rather than counting halves as wholes.
 
 NOTHING HERE IS A SHELL. Every predicate below is a statement that could be false: no `True`-valued
 coupling, no `fun _ => True`, no hypothesis that is its own conclusion. Where a proof is not
@@ -104,18 +111,39 @@ def C6_holomorphic_extension : Coupling := fun (Φ : ℝ → ℂ) =>
   ∃ F : ℂ → ℂ, (∀ z : ℂ, 0 < z.re → DifferentiableAt ℂ F z) ∧
     ∀ t : ℝ, 0 < t → F (t : ℂ) = Φ t
 
-/-- **C₇ (Hadamard product / order ≤ 1).**  The completed function built from `Φ` continues to
-an entire function of order at most 1 — the hypothesis of the Hadamard factorisation that
-controls the global zero distribution.  Stated via the growth bound on the entire completion. -/
-def C7_order_one_completion : Coupling := fun (Φ : ℝ → ℂ) =>
+/-- **C₇-ENTIRETY (Hadamard, the certifiable half).**  The *completed* Mellin transform of `Φ`
+agrees on the convergence half-plane with an **entire** function: adding back the principal parts
+at `s = 0` and `s = 1` gives a function with no poles anywhere.  This is the analytic-continuation
+half of the Hadamard input — it says the object Hadamard would factor *exists as an entire
+function*.  PROVED at `Phi` below (`G = completedRiemannZeta₀`, via T1 + Mathlib's
+`differentiable_completedZeta₀`). -/
+def C7_entirety : Coupling := fun (Φ : ℝ → ℂ) =>
   ∃ G : ℂ → ℂ, Differentiable ℂ G ∧
-    (∀ s : ℂ, 1 < s.re → G s = mellin Φ (s / 2)) ∧
+    ∀ s : ℂ, 1 < s.re → G s = mellin Φ (s / 2) + 1 / s + 1 / (1 - s)
+
+/-- **C₇-ORDER (Hadamard, the open half).**  That entire completion has **order ≤ 1**:
+`‖G s‖ ≤ C · exp (A · ‖s‖)`.  This is the hypothesis the Hadamard factorisation actually consumes —
+it is what bounds the zero-counting function and gives the product its shape.  **Entirety alone does
+not give it**, and this is where the class's real content sits.
+
+OPEN, and priced honestly.  Its true cost is two classical ingredients, **neither of which is in
+Mathlib at this pin**:
+  (1) **Stirling control of the Γ factor** — a bound `‖Γ(s/2)‖ ≤ exp (A‖s‖ log‖s‖)`-type estimate.
+      Mathlib has no `Gamma/Stirling` file and no norm bound on `Complex.Gamma` at all.
+  (2) **Finite order of ζ in the strip** — polynomial growth of `ζ` on vertical lines, then
+      Phragmén–Lindelöf to fill the strip.  Mathlib HAS `PhragmenLindelof.vertical_strip`, but that
+      is a *maximum principle*: it converts growth control into boundedness.  It cannot supply (1),
+      and it cannot manufacture an order bound from entirety.
+Formalising C₇-order is therefore a Γ-asymptotics project, not a corollary of what exists. -/
+def C7_order : Coupling := fun (Φ : ℝ → ℂ) =>
+  ∃ G : ℂ → ℂ, Differentiable ℂ G ∧
+    (∀ s : ℂ, 1 < s.re → G s = mellin Φ (s / 2) + 1 / s + 1 / (1 - s)) ∧
     ∃ C A : ℝ, ∀ s : ℂ, ‖G s‖ ≤ C * Real.exp (A * ‖s‖)
 
 /-- The seven classes, as the family `𝒞` that `T3prime_shared_witness` consumes. -/
 def sevenClasses : Set Coupling :=
   {C1_realness, C2_halfplane_nonvanishing, C3_theta_transformation, C4_modularity,
-   C5_input, C6_holomorphic_extension, C7_order_one_completion}
+   C5_input, C6_holomorphic_extension, C7_order}
 -- NOTE: `C5_output` is deliberately NOT in `sevenClasses`: it is the disclaimed half.
 
 /-! ## Discharges at the fixed witness `Phi` -/
@@ -197,12 +225,28 @@ theorem C5_input_at_Phi : C5_input Phi := by
   have h3 := Complex.hasSum_ofReal.2 h
   simpa using h3
 
-/-- **C₇ at Φ — OPEN.**  `completedRiemannZeta₀` is entire (`differentiable_completedZeta₀`), and
-the order bound is classical, but the growth estimate `‖Λ₀ s‖ ≤ C exp (A ‖s‖)` is not available
-in Mathlib at this pin.  Attempted; not discharged. -/
-theorem C7_order_one_completion_at_Phi : C7_order_one_completion Phi := by
-  sorry -- OPEN: `differentiable_completedZeta₀` gives entirety; the order-≤1 growth bound is
-        -- not in Mathlib at this pin.
+/-- **C₇-ENTIRETY at Φ — PROVED.**  `G = completedRiemannZeta₀` is entire
+(`differentiable_completedZeta₀`), and on `1 < re s` Mathlib's `completedRiemannZeta_eq` gives
+`Λ s = Λ₀ s - 1/s - 1/(1-s)`, i.e. `Λ₀ s = Λ s + 1/s + 1/(1-s)`; T1/T2 identify `Λ s` with
+`mellin Phi (s/2)`.  So the completed Mellin transform of the fixed witness continues to an entire
+function — the object Hadamard would factor exists. -/
+theorem C7_entirety_at_Phi : C7_entirety Phi := by
+  refine ⟨completedRiemannZeta₀, differentiable_completedZeta₀, ?_⟩
+  intro s hs
+  have h := completedRiemannZeta_eq s
+  have hm := completedRiemannZeta_eq_mellinPhi s hs
+  rw [← hm]
+  rw [h]
+  ring
+
+/-- **C₇-ORDER at Φ — OPEN.**  The order-≤1 growth bound on the entire completion.  See
+`C7_order`'s docstring for the price: Stirling control of Γ (absent from Mathlib entirely) plus
+finite order of ζ in the strip (for which `PhragmenLindelof.vertical_strip` is a tool, not a
+substitute).  The statement is NOT weakened to obtain a proof; the obligation is carried openly. -/
+theorem C7_order_at_Phi : C7_order Phi := by
+  sorry -- OPEN: needs (1) Stirling/Γ growth bounds — Mathlib has NO norm bound on Complex.Gamma
+        -- and no Gamma/Stirling file; (2) finite order of ζ in the strip. PhragmenLindelof.
+        -- vertical_strip exists but is a maximum principle: it cannot supply either ingredient.
 
 /-! ## What C₄ and C₅ are, and are not
 
