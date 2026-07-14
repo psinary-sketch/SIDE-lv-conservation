@@ -14,11 +14,20 @@ discharges those it can against Mathlib. It is the h1 half of the obligation, in
 STATUS AT THIS COMMIT (honest; see the per-class comments):
   C₁ realness                       PROVED   (`C1_realness_at_Phi`)
   C₂ half-plane Mellin nonvanishing PROVED   (`C2_halfplane_nonvanishing_at_Phi`)
-  C₃ theta transformation           OPEN     (`sorry`; the FE is Mathlib's, the Φ-side transport is not)
+  C₃ theta transformation           PROVED   (`C3_theta_transformation_at_Phi`, via Mathlib's
+                                              `evenKernel_functional_equation`)
   C₄ modularity                     STATED   (no proof claimed)
-  C₅ heat-trace of a self-adjoint spectrum  STATED (no proof claimed)
-  C₆ holomorphic extension to Re t > 0      OPEN (`sorry`; attempted — see the note)
-  C₇ order-≤1 completed continuation        OPEN (`sorry`; attempted — see the note)
+  C₅-INPUT  heat trace of a real, non-negative spectrum   PROVED (`C5_input_at_Phi`, μ n = n²,
+                                              via Mathlib's `hasSum_int_evenKernel`)
+  C₅-OUTPUT the spectral realisation (Hilbert–Pólya)      STATED, DISCLAIMED, NEVER CLAIMED.
+                                              The gap between C₅-input and C₅-output is the
+                                              premise's FIFTH REGISTER — see `C5_output`.
+  C₆ holomorphic extension          PROVED   (`C6_holomorphic_extension_at_Phi`, via Mathlib's
+                                              `differentiableAt_jacobiTheta₂_snd`)
+  C₇ order-≤1 completed continuation OPEN    (`sorry`; entirety is Mathlib's, the growth bound is not)
+
+FIVE of the seven couplings are now discharged at the fixed witness Φ (C₁, C₂, C₃, C₅-input, C₆).
+The h1 obligation of `T3prime_shared_witness` is not complete: C₄ is unproved and C₇ is open.
 
 NOTHING HERE IS A SHELL. Every predicate below is a statement that could be false: no `True`-valued
 coupling, no `fun _ => True`, no hypothesis that is its own conclusion. Where a proof is not
@@ -62,13 +71,31 @@ with translation.  Stated; no proof claimed at this commit. -/
 def C4_modularity : Coupling := fun (Φ : ℝ → ℂ) =>
   ∀ t : ℝ, 0 < t → Φ (t + 2) = Φ t → Φ (1 / t) = Real.sqrt t * Φ t + (Real.sqrt t - 1) / 2
 
-/-- **C₅ (spectral self-adjointness).**  The integrand is the heat trace of a self-adjoint
-spectrum: there is a real, non-negative eigenvalue sequence `μ` with
-`Φ t = ∑' n, exp (-π * μ n * t)` (up to the fixed normalisation).  Self-adjointness enters as
-the reality and non-negativity of `μ`.  Stated; no proof claimed at this commit. -/
-def C5_heat_trace : Coupling := fun (Φ : ℝ → ℂ) =>
-  ∃ μ : ℕ → ℝ, (∀ n, 0 ≤ μ n) ∧
-    ∀ t : ℝ, 0 < t → Φ t = ∑' n : ℕ, Complex.exp (-Real.pi * μ n * t)
+/-- **C₅-INPUT (spectral self-adjointness — the certifiable half).**  The integrand is the heat
+trace of a real, non-negative spectrum: there is `μ : ℤ → ℝ` with `μ n ≥ 0` and
+`∑_{n : ℤ} exp (-π · μ n · t) = 2 Φ t + 1` for `t > 0`.  This is the SPECTRAL INPUT: the existence
+of a non-negative spectrum whose heat trace is the kernel.  It is certifiable, and it is certified
+below at `Phi` (with `μ n = n²`). -/
+def C5_input : Coupling := fun (Φ : ℝ → ℂ) =>
+  ∃ μ : ℤ → ℝ, (∀ n : ℤ, 0 ≤ μ n) ∧
+    ∀ t : ℝ, 0 < t → HasSum (fun n : ℤ => ((Real.exp (-Real.pi * μ n * t) : ℝ) : ℂ)) (2 * Φ t + 1)
+
+/-- **C₅-OUTPUT (the spectral realisation — DISCLAIMED, never claimed).**  That the spectrum of
+C₅-input is the spectrum *of a self-adjoint operator whose eigenvalues are the zeta zeros* — the
+Hilbert–Pólya assertion.  **This programme explicitly DISCLAIMS it** (EXCLUSION_ENGINE, Misreadings:
+the spectral kernels disclaim Hilbert–Pólya rather than rest on it), and NO theorem in this file
+claims it at `Phi` or anywhere else.
+
+It is stated only so that the gap between input and output has a name.  **That gap is the premise's
+FIFTH REGISTER** (BALANCE_AND_POSITIVITY §IV lists four; this is the fifth): over `𝔽_q` the input's
+positivity and the output's coincide — Weil's 1948 proof supplies the operator-side positivity from
+the Hodge-index/Castelnuovo inequality on `C × C` — while over `ℚ` the coincidence is exactly what
+is missing.  The formation distance between `C5_input` and `C5_output` IS the premise, in spectral
+coordinates.  See BALANCE_AND_POSITIVITY, "The function-field face at the fixed witness". -/
+def C5_output : Coupling := fun (Φ : ℝ → ℂ) =>
+  ∃ (H : Type) (_ : ∀ _ : H, ℝ), ∃ μ : ℤ → ℝ, (∀ n : ℤ, 0 ≤ μ n) ∧
+    (∀ t : ℝ, 0 < t → HasSum (fun n : ℤ => ((Real.exp (-Real.pi * μ n * t) : ℝ) : ℂ)) (2 * Φ t + 1)) ∧
+    ∀ n : ℤ, ∃ ρ : ℂ, ρ.re = 1 / 2 ∧ ρ.im ^ 2 = μ n
 
 /-- **C₆ (Cauchy–Riemann / local analyticity).**  The integrand extends holomorphically to the
 right half-plane `0 < re z`: there is `F : ℂ → ℂ`, differentiable on `{z | 0 < re z}`, agreeing
@@ -88,7 +115,8 @@ def C7_order_one_completion : Coupling := fun (Φ : ℝ → ℂ) =>
 /-- The seven classes, as the family `𝒞` that `T3prime_shared_witness` consumes. -/
 def sevenClasses : Set Coupling :=
   {C1_realness, C2_halfplane_nonvanishing, C3_theta_transformation, C4_modularity,
-   C5_heat_trace, C6_holomorphic_extension, C7_order_one_completion}
+   C5_input, C6_holomorphic_extension, C7_order_one_completion}
+-- NOTE: `C5_output` is deliberately NOT in `sevenClasses`: it is the disclaimed half.
 
 /-! ## Discharges at the fixed witness `Phi` -/
 
@@ -115,24 +143,59 @@ theorem C2_halfplane_nonvanishing_at_Phi : C2_halfplane_nonvanishing Phi := by
     rw [riemannZeta_def_of_ne_zero hs0, hΛ, zero_div]
   exact riemannZeta_ne_zero_of_one_lt_re hs hz
 
-/-- **C₆ at Φ — OPEN.**  The extension is the classical one: `evenKernel 0` is a theta series
-`∑ exp (-π n² t)`, holomorphic in `t` on `0 < re t` by locally-uniform convergence.  Mathlib
-carries the Jacobi theta apparatus but does not (at this Mathlib pin) expose the holomorphy of
-`HurwitzZeta.evenKernel` in its `t` argument in the packaged form this predicate needs, and
-deriving it here means reproving locally-uniform convergence of the theta series.  The obligation
-is left explicit rather than discharged by weakening `C6_holomorphic_extension`. -/
+/-- **C₆ at Φ — PROVED.**  The extension is `F z = (jacobiTheta₂ 0 (I * z) - 1) / 2`.  Mathlib's
+`differentiableAt_jacobiTheta₂_snd` gives holomorphy of `Θ 0 τ` in `τ` on `0 < im τ`, and
+`im (I * z) = z.re`, so `F` is holomorphic exactly on the right half-plane.  On positive reals it
+agrees with `Phi` by `evenKernel_def` at `a = 0`. -/
 theorem C6_holomorphic_extension_at_Phi : C6_holomorphic_extension Phi := by
-  sorry -- OPEN: needs holomorphy of `evenKernel 0` in `t` on `0 < re t` (theta-series
-        -- locally-uniform convergence). Not available packaged at this Mathlib pin.
+  refine ⟨fun z => (jacobiTheta₂ 0 (Complex.I * z) - 1) / 2, ?_, ?_⟩
+  · intro z hz
+    have hτ : 0 < (Complex.I * z).im := by simpa using hz
+    have hθ : DifferentiableAt ℂ (fun w : ℂ => jacobiTheta₂ 0 (Complex.I * w)) z := by
+      have h1 : DifferentiableAt ℂ (fun w : ℂ => Complex.I * w) z :=
+        (differentiableAt_const _).mul differentiableAt_id
+      exact (differentiableAt_jacobiTheta₂_snd 0 hτ).comp z h1
+    exact ((hθ.sub (differentiableAt_const _)).div_const 2)
+  · intro t ht
+    have h := evenKernel_def 0 t
+    simp only [Phi]
+    rw [show ((0 : ℝ) : UnitAddCircle) = (0 : UnitAddCircle) from rfl] at h
+    simp only [ofReal_zero, zero_pow, mul_zero, zero_mul, neg_zero, Complex.exp_zero, one_mul,
+      ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true] at h
+    rw [← h]
 
-/-- **C₃ at Φ — OPEN.**  Mathlib *has* the functional equation
-(`completedRiemannZeta_one_sub : Λ (1 - s) = Λ s`), but that is a statement about the *continued*
-Λ, not about the integrand.  Transporting it to the theta-inversion law on Φ requires the
-inversion property of `evenKernel`, which is the same missing analytic input as C₆.  Attempted;
-not discharged. -/
+/-- **C₃ at Φ — PROVED.**  Mathlib's `evenKernel_functional_equation` gives
+`evenKernel a x = x^(-1/2) * cosKernel a (1/x)`, and at `a = 0` the two kernels coincide
+(`evenKernel_eq_cosKernel_of_zero`), so `K (1/t) = √t · K t`.  Substituting `Phi = (K - 1)/2`
+gives exactly the theta-inversion law of `C3_theta_transformation`. -/
 theorem C3_theta_transformation_at_Phi : C3_theta_transformation Phi := by
-  sorry -- OPEN: needs the theta inversion law for `evenKernel 0` (Mathlib has the FE for Λ,
-        -- not the Φ-side transport).
+  intro t ht
+  have hK : evenKernel 0 (1 / t) = Real.sqrt t * evenKernel 0 t := by
+    have hfe := evenKernel_functional_equation 0 t
+    rw [← evenKernel_eq_cosKernel_of_zero, ← Real.sqrt_eq_rpow] at hfe
+    have hs : Real.sqrt t ≠ 0 := ne_of_gt (Real.sqrt_pos.2 ht)
+    have h2 : Real.sqrt t * evenKernel 0 t = evenKernel 0 (1 / t) := by
+      rw [hfe]; field_simp
+    exact h2.symm
+  simp only [Phi]
+  push_cast [hK]
+  ring
+
+/-- **C₅-INPUT at Φ — PROVED.**  The spectrum is `μ n = n²` — real, non-negative — and Mathlib's
+`hasSum_int_evenKernel` says exactly that its heat trace is the kernel:
+`∑_{n : ℤ} exp (-π n² t) = evenKernel 0 t = 2 · Phi t + 1`.  The SPECTRAL INPUT is therefore
+certified at the fixed witness.  (The spectral OUTPUT — that this spectrum is a self-adjoint
+operator's, with the zeros as eigenvalues — is `C5_output`, and is NOT claimed: see its docstring.
+The distance between the two is the premise's fifth register.) -/
+theorem C5_input_at_Phi : C5_input Phi := by
+  refine ⟨fun n : ℤ => (n : ℝ) ^ 2, fun n => sq_nonneg _, ?_⟩
+  intro t ht
+  have h := hasSum_int_evenKernel 0 ht
+  have h2 : (2 : ℂ) * Phi t + 1 = ((evenKernel 0 t : ℝ) : ℂ) := by
+    simp only [Phi]; ring
+  rw [h2]
+  have h3 := Complex.hasSum_ofReal.2 h
+  simpa using h3
 
 /-- **C₇ at Φ — OPEN.**  `completedRiemannZeta₀` is entire (`differentiable_completedZeta₀`), and
 the order bound is classical, but the growth estimate `‖Λ₀ s‖ ≤ C exp (A ‖s‖)` is not available
