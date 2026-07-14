@@ -1,0 +1,179 @@
+/-
+# CouplingsAtPhi — the seven mechanism classes as `Coupling` predicates, at T1's fixed witness
+
+Work-order O.18 (PLACE-papers OPEN_TRAILS): *discharge the Conservation of Spectra premise*.
+The bridge theorem `T3prime_shared_witness` (T3_StepNineBridge.lean) closes the per-class-to-joint
+step under two hypotheses:
+
+  h1 : ∀ C ∈ 𝒞, C Phi          -- every mechanism class is satisfied by the ONE fixed witness
+  h2 : mellin Phi (s / 2) ≠ 0  -- that witness has non-vanishing Mellin factor at s
+
+This file states the seven classes of monograph Ch. 15 §15.2 as `Coupling` predicates and
+discharges those it can against Mathlib. It is the h1 half of the obligation, in progress.
+
+STATUS AT THIS COMMIT (honest; see the per-class comments):
+  C₁ realness                       PROVED   (`C1_realness_at_Phi`)
+  C₂ half-plane Mellin nonvanishing PROVED   (`C2_halfplane_nonvanishing_at_Phi`)
+  C₃ theta transformation           OPEN     (`sorry`; the FE is Mathlib's, the Φ-side transport is not)
+  C₄ modularity                     STATED   (no proof claimed)
+  C₅ heat-trace of a self-adjoint spectrum  STATED (no proof claimed)
+  C₆ holomorphic extension to Re t > 0      OPEN (`sorry`; attempted — see the note)
+  C₇ order-≤1 completed continuation        OPEN (`sorry`; attempted — see the note)
+
+NOTHING HERE IS A SHELL. Every predicate below is a statement that could be false: no `True`-valued
+coupling, no `fun _ => True`, no hypothesis that is its own conclusion. Where a proof is not
+available the obligation carries a `sorry` and says why — it is not discharged by weakening the
+statement.
+-/
+import SIDELvConservation.T1_MellinFactorization
+import SIDELvConservation.T2_SDarkness
+import SIDELvConservation.T3_StepNineBridge
+import Mathlib.NumberTheory.Harmonic.EulerMascheroni
+
+open Complex HurwitzZeta Set MeasureTheory
+
+namespace SIDELvConservation
+
+open T3
+
+/-! ## The seven couplings (Ch. 15 §15.2), as predicates on the Mellin integrand -/
+
+/-- **C₁ (Schwarz reflection / realness).**  The integrand is real-valued: its imaginary part
+vanishes identically.  This is the Φ-side content of "real coefficients" — the source of the
+reflection symmetry `Λ(s̄) = conj (Λ s)`. -/
+def C1_realness : Coupling := fun (Φ : ℝ → ℂ) => ∀ t : ℝ, (Φ t).im = 0
+
+/-- **C₂ (Euler / multiplicative).**  The Mellin factor does not vanish on the convergence
+half-plane.  This is the Φ-side content of the Euler product: absolute convergence and
+non-vanishing for `1 < re s`. -/
+def C2_halfplane_nonvanishing : Coupling := fun (Φ : ℝ → ℂ) =>
+  ∀ s : ℂ, 1 < s.re → mellin Φ (s / 2) ≠ 0
+
+/-- **C₃ (functional equation / theta transformation).**  The integrand obeys the theta
+inversion law `Φ (1/t) = √t · Φ t + (correction)`, which is what pushes the functional
+equation `Λ(1 - s) = Λ(s)` through the Mellin transform.  Stated here in the weak form that
+the transformation exists with a real Jacobian factor. -/
+def C3_theta_transformation : Coupling := fun (Φ : ℝ → ℂ) =>
+  ∀ t : ℝ, 0 < t → Φ (1 / t) = Real.sqrt t * Φ t + (Real.sqrt t - 1) / 2
+
+/-- **C₄ (modular / PSL₂(ℤ)).**  The integrand is invariant under the modular action in the
+sense that it is a fixed point of the weight-1/2 slash of the generator `t ↦ 1/t` composed
+with translation.  Stated; no proof claimed at this commit. -/
+def C4_modularity : Coupling := fun (Φ : ℝ → ℂ) =>
+  ∀ t : ℝ, 0 < t → Φ (t + 2) = Φ t → Φ (1 / t) = Real.sqrt t * Φ t + (Real.sqrt t - 1) / 2
+
+/-- **C₅ (spectral self-adjointness).**  The integrand is the heat trace of a self-adjoint
+spectrum: there is a real, non-negative eigenvalue sequence `μ` with
+`Φ t = ∑' n, exp (-π * μ n * t)` (up to the fixed normalisation).  Self-adjointness enters as
+the reality and non-negativity of `μ`.  Stated; no proof claimed at this commit. -/
+def C5_heat_trace : Coupling := fun (Φ : ℝ → ℂ) =>
+  ∃ μ : ℕ → ℝ, (∀ n, 0 ≤ μ n) ∧
+    ∀ t : ℝ, 0 < t → Φ t = ∑' n : ℕ, Complex.exp (-Real.pi * μ n * t)
+
+/-- **C₆ (Cauchy–Riemann / local analyticity).**  The integrand extends holomorphically to the
+right half-plane `0 < re z`: there is `F : ℂ → ℂ`, differentiable on `{z | 0 < re z}`, agreeing
+with `Φ` on the positive reals. -/
+def C6_holomorphic_extension : Coupling := fun (Φ : ℝ → ℂ) =>
+  ∃ F : ℂ → ℂ, (∀ z : ℂ, 0 < z.re → DifferentiableAt ℂ F z) ∧
+    ∀ t : ℝ, 0 < t → F (t : ℂ) = Φ t
+
+/-- **C₇ (Hadamard product / order ≤ 1).**  The completed function built from `Φ` continues to
+an entire function of order at most 1 — the hypothesis of the Hadamard factorisation that
+controls the global zero distribution.  Stated via the growth bound on the entire completion. -/
+def C7_order_one_completion : Coupling := fun (Φ : ℝ → ℂ) =>
+  ∃ G : ℂ → ℂ, Differentiable ℂ G ∧
+    (∀ s : ℂ, 1 < s.re → G s = mellin Φ (s / 2)) ∧
+    ∃ C A : ℝ, ∀ s : ℂ, ‖G s‖ ≤ C * Real.exp (A * ‖s‖)
+
+/-- The seven classes, as the family `𝒞` that `T3prime_shared_witness` consumes. -/
+def sevenClasses : Set Coupling :=
+  {C1_realness, C2_halfplane_nonvanishing, C3_theta_transformation, C4_modularity,
+   C5_heat_trace, C6_holomorphic_extension, C7_order_one_completion}
+
+/-! ## Discharges at the fixed witness `Phi` -/
+
+/-- **C₁ at Φ — PROVED.**  `Phi t = ((evenKernel 0 t : ℂ) - 1) / 2` with `evenKernel 0 t : ℝ`,
+so the imaginary part is zero by construction. -/
+theorem C1_realness_at_Phi : C1_realness Phi := by
+  intro t
+  simp [C1_realness, Phi]
+
+/-- **C₂ at Φ — PROVED.**  On `1 < re s` the Mellin factor *is* `completedRiemannZeta s` (T1/T2),
+and `Λ(s) = ζ(s) · Γℝ(s)` is non-zero there: `ζ` does not vanish on the half-plane
+(`riemannZeta_ne_zero_of_one_lt_re`) and `Γℝ` does not vanish for `0 < re s`
+(`Gammaℝ_ne_zero_of_re_pos`).  This is the Euler-product content, transported to Φ. -/
+theorem C2_halfplane_nonvanishing_at_Phi : C2_halfplane_nonvanishing Phi := by
+  intro s hs hzero
+  -- Transport the vanishing back to the completed zeta.
+  have hΛ : completedRiemannZeta s = 0 := by
+    rw [completedRiemannZeta_eq_mellinPhi s hs]; exact hzero
+  -- s ≠ 0 since 1 < re s.
+  have hs0 : s ≠ 0 := by
+    intro h; rw [h] at hs; simp at hs; linarith
+  -- ζ s = Λ s / Γℝ s = 0, contradicting non-vanishing on the half-plane.
+  have hz : riemannZeta s = 0 := by
+    rw [riemannZeta_def_of_ne_zero hs0, hΛ, zero_div]
+  exact riemannZeta_ne_zero_of_one_lt_re hs hz
+
+/-- **C₆ at Φ — OPEN.**  The extension is the classical one: `evenKernel 0` is a theta series
+`∑ exp (-π n² t)`, holomorphic in `t` on `0 < re t` by locally-uniform convergence.  Mathlib
+carries the Jacobi theta apparatus but does not (at this Mathlib pin) expose the holomorphy of
+`HurwitzZeta.evenKernel` in its `t` argument in the packaged form this predicate needs, and
+deriving it here means reproving locally-uniform convergence of the theta series.  The obligation
+is left explicit rather than discharged by weakening `C6_holomorphic_extension`. -/
+theorem C6_holomorphic_extension_at_Phi : C6_holomorphic_extension Phi := by
+  sorry -- OPEN: needs holomorphy of `evenKernel 0` in `t` on `0 < re t` (theta-series
+        -- locally-uniform convergence). Not available packaged at this Mathlib pin.
+
+/-- **C₃ at Φ — OPEN.**  Mathlib *has* the functional equation
+(`completedRiemannZeta_one_sub : Λ (1 - s) = Λ s`), but that is a statement about the *continued*
+Λ, not about the integrand.  Transporting it to the theta-inversion law on Φ requires the
+inversion property of `evenKernel`, which is the same missing analytic input as C₆.  Attempted;
+not discharged. -/
+theorem C3_theta_transformation_at_Phi : C3_theta_transformation Phi := by
+  sorry -- OPEN: needs the theta inversion law for `evenKernel 0` (Mathlib has the FE for Λ,
+        -- not the Φ-side transport).
+
+/-- **C₇ at Φ — OPEN.**  `completedRiemannZeta₀` is entire (`differentiable_completedZeta₀`), and
+the order bound is classical, but the growth estimate `‖Λ₀ s‖ ≤ C exp (A ‖s‖)` is not available
+in Mathlib at this pin.  Attempted; not discharged. -/
+theorem C7_order_one_completion_at_Phi : C7_order_one_completion Phi := by
+  sorry -- OPEN: `differentiable_completedZeta₀` gives entirety; the order-≤1 growth bound is
+        -- not in Mathlib at this pin.
+
+/-! ## What C₄ and C₅ are, and are not
+
+`C4_modularity` and `C5_heat_trace` are STATED ONLY.  No theorem in this file claims them at
+`Phi`, and none should until the statements are argued in the manuscript layer: C₅ in particular
+asserts a *specific* spectral realisation, which the programme explicitly does NOT claim (see the
+Misreadings appendix of EXCLUSION_ENGINE: the spectral kernels disclaim Hilbert–Pólya rather than
+rest on it).  Writing `C5_heat_trace Phi` as a theorem would be an overclaim.
+-/
+
+/-! ## The n = 1 binding instance of the channel inequality
+
+From the bench (BALANCE_AND_POSITIVITY Appendix B):
+
+  λ_A(1) = 1 - γ/2 - log 2 - (1/2) log π          (= -0.554119955935…)
+  λ_Z(1) = γ                                       (= +0.577215664902…)
+
+so the joint's n = 1 instance `λ_Z(1) ≥ -λ_A(1)` is *exactly* the constants inequality
+
+  **γ + 2 ≥ log (4 π)**          (slack = 2 λ₁ = 0.0461914179…)
+
+NOTE — CORRECTION OF THE WORK-ORDER.  The O.18 sitting proposed this as `3γ + 2 ≥ log (4π)`.
+That is a true inequality but it is NOT the n = 1 instance: its slack is 1.2006…, whereas the
+n = 1 instance has slack exactly `2 λ₁ = 0.046191…`.  The correct constants form is `γ + 2 ≥
+log (4π)`, verified against the bench to 15 digits.  It is stated below.
+
+WHY IT IS NOT PROVED HERE.  It needs `γ ≥ log (4π) - 2 = 0.53102…`.  Mathlib's available bounds
+are `one_half_lt_eulerMascheroniConstant : 1/2 < γ` and `eulerMascheroniConstant_lt_two_thirds`,
+and `1/2 < γ` is NOT sharp enough (0.5 < 0.53102).  A sharper lower bound is derivable from
+`eulerMascheroniSeq_lt_eulerMascheroniConstant` plus numeric bounds on `log`, but that is a
+numeric-analysis exercise, not a transport of the premise, and it is left as its own obligation
+rather than asserted. -/
+theorem n_one_binding_instance :
+    Real.eulerMascheroniConstant + 2 ≥ Real.log (4 * Real.pi) := by
+  sorry -- OPEN: needs γ ≥ 0.53102…; Mathlib's `1/2 < γ` is not sharp enough. See the note above.
+
+end SIDELvConservation
