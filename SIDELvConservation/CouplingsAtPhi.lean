@@ -121,10 +121,20 @@ def C7_entirety : Coupling := fun (Φ : ℝ → ℂ) =>
   ∃ G : ℂ → ℂ, Differentiable ℂ G ∧
     ∀ s : ℂ, 1 < s.re → G s = mellin Φ (s / 2) + 1 / s + 1 / (1 - s)
 
-/-- **C₇-ORDER (Hadamard, the open half).**  That entire completion has **order ≤ 1**:
-`‖G s‖ ≤ C · exp (A · ‖s‖)`.  This is the hypothesis the Hadamard factorisation actually consumes —
-it is what bounds the zero-counting function and gives the product its shape.  **Entirety alone does
-not give it**, and this is where the class's real content sits.
+/-- **C₇-ORDER (Hadamard, the open half).**  That entire completion has **order ≤ 1** — the
+maximal-type growth `‖G s‖ ≤ C · exp (A · ‖s‖ · log (‖s‖ + 2))`.  This is the actual growth of the
+completed zeta (the Γ factor forces `exp(½‖s‖ log‖s‖)` on the real axis), it implies order ≤ 1, and
+it is exactly the hypothesis the **genus-1** Hadamard factorisation consumes — the one that bounds
+the zero-counting function and gives the product its shape.  **Entirety alone does not give it**, and
+this is where the class's real content sits.
+
+CORRECTION (2026-07-14 — W-8 sitting-1 STOP, `OPEN_TRAILS`).  This conjunct previously read
+`∃ C A, ‖G s‖ ≤ C · exp (A · ‖s‖)` and was mislabelled "order ≤ 1".  That is **finite exponential
+type**, and it is **provably false** of the forced witness `G = completedRiemannZeta₀`: (i) along the
+positive real axis `‖G σ‖ ~ exp(½ σ log σ)` (the Γ factor), which beats `C · exp(A σ)` for *every*
+fixed `A`; (ii) `G` carries the nontrivial zeros of ζ, `n(T) ~ (T/2π) log T` — superlinear — so by
+Jensen it cannot be of finite exponential type.  **Genus-1 Hadamard consumes order ≤ 1, not finite
+type.**  The statement is corrected to the true order form, which complex Stirling delivers directly.
 
 OPEN, and priced honestly.  Its true cost is two classical ingredients, **neither of which is in
 Mathlib at this pin**:
@@ -138,7 +148,7 @@ Formalising C₇-order is therefore a Γ-asymptotics project, not a corollary of
 def C7_order : Coupling := fun (Φ : ℝ → ℂ) =>
   ∃ G : ℂ → ℂ, Differentiable ℂ G ∧
     (∀ s : ℂ, 1 < s.re → G s = mellin Φ (s / 2) + 1 / s + 1 / (1 - s)) ∧
-    ∃ C A : ℝ, ∀ s : ℂ, ‖G s‖ ≤ C * Real.exp (A * ‖s‖)
+    ∃ A C : ℝ, ∀ s : ℂ, ‖G s‖ ≤ C * Real.exp (A * (‖s‖ * Real.log (‖s‖ + 2)))
 
 /-- The seven classes, as the family `𝒞` that `T3prime_shared_witness` consumes. -/
 def sevenClasses : Set Coupling :=
@@ -239,14 +249,21 @@ theorem C7_entirety_at_Phi : C7_entirety Phi := by
   rw [h]
   ring
 
-/-- **C₇-ORDER at Φ — OPEN.**  The order-≤1 growth bound on the entire completion.  See
-`C7_order`'s docstring for the price: Stirling control of Γ (absent from Mathlib entirely) plus
-finite order of ζ in the strip (for which `PhragmenLindelof.vertical_strip` is a tool, not a
-substitute).  The statement is NOT weakened to obtain a proof; the obligation is carried openly. -/
+/-- **C₇-ORDER at Φ — OPEN.**  The order-≤1 (maximal-type) growth bound on the entire completion,
+`‖G s‖ ≤ C · exp (A · ‖s‖ · log (‖s‖ + 2))`.  See `C7_order`'s docstring for the price and for the
+2026-07-14 correction of the statement's form (the earlier finite-exponential-type form was false of
+the forced witness — W-8 sitting-1 STOP).  The statement is carried openly; it is not weakened.
+
+Truth-plausibility screen (2026-07-14, per the standing rule).  Forced witness
+`G = completedRiemannZeta₀` (pinned by the entirety conjunct + the identity theorem).  The corrected
+order-≤1 / maximal-type bound **holds** of it — the Γ real-axis growth `exp(½ σ log σ)` sits inside
+this form, and genus-1 Hadamard consumes order ≤ 1.  The old finite-type form did **not** hold of the
+same witness; that is why it was corrected, not merely left open. -/
 theorem C7_order_at_Phi : C7_order Phi := by
-  sorry -- OPEN: needs (1) Stirling/Γ growth bounds — Mathlib has NO norm bound on Complex.Gamma
-        -- and no Gamma/Stirling file; (2) finite order of ζ in the strip. PhragmenLindelof.
-        -- vertical_strip exists but is a maximum principle: it cannot supply either ingredient.
+  sorry -- OPEN: needs (1) complex-Stirling bound ‖Γ(s/2)‖ ≤ exp(A‖s‖ log‖s‖) — Mathlib has NO norm
+        -- bound on Complex.Gamma and no Gamma/Stirling file; (2) finite order of ζ in the strip via
+        -- PhragmenLindelof.vertical_strip (a maximum principle — a tool, not the ingredient).
+        -- Statement CORRECTED 2026-07-14 to true order ≤ 1 (was false finite-type — W-8 STOP).
 
 /-! ## What C₄ and C₅ are, and are not
 
