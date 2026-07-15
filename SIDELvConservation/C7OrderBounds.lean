@@ -89,4 +89,33 @@ theorem norm_completedRiemannZeta₀_le (s : ℂ) :
   rw [Set.mem_Ioi] at ht
   rw [norm_smul, Complex.norm_cpow_eq_rpow_re_of_pos ht, Complex.sub_re, Complex.one_re]
 
+/-- On `Ioi 1`, `‖f_modif t‖ = |evenKernel 0 t − 1|` — the `Ioi 1` indicator piece. -/
+theorem norm_f_modif_of_one_lt {t : ℝ} (ht : 1 < t) :
+    ‖(hurwitzEvenFEPair 0).f_modif t‖ = |evenKernel 0 t - 1| := by
+  have hnotIoo : t ∉ Set.Ioo (0 : ℝ) 1 := fun h => absurd h.2 (not_lt.mpr ht.le)
+  simp only [WeakFEPair.f_modif, hurwitzEvenFEPair, Function.comp_apply, Pi.add_apply,
+    Set.indicator_of_mem (Set.mem_Ioi.mpr ht), Set.indicator_of_notMem hnotIoo, add_zero,
+    if_true]
+  rw [show ((evenKernel 0 t : ℝ) : ℂ) - 1 = ((evenKernel 0 t - 1 : ℝ) : ℂ) by push_cast; ring,
+    Complex.norm_real, Real.norm_eq_abs]
+
+/-- On `Ioo 0 1`, the theta functional equation folds `f_modif` back to the tail: `‖f_modif t‖ =
+t^{−1/2}·|evenKernel 0 (1/t) − 1|`. Uses `evenKernel_functional_equation` + `evenKernel 0 = cosKernel 0`. -/
+theorem norm_f_modif_of_mem_Ioo {t : ℝ} (ht : t ∈ Set.Ioo (0 : ℝ) 1) :
+    ‖(hurwitzEvenFEPair 0).f_modif t‖ = t ^ (-(1 / 2) : ℝ) * |evenKernel 0 (1 / t) - 1| := by
+  have ht0 : 0 < t := ht.1
+  have hnotIoi : t ∉ Set.Ioi (1 : ℝ) := fun h => absurd h (not_lt.mpr ht.2.le)
+  have hfe : evenKernel 0 t = t ^ (-(1 / 2) : ℝ) * evenKernel 0 (1 / t) := by
+    rw [evenKernel_functional_equation, evenKernel_eq_cosKernel_of_zero, one_div,
+      ← Real.rpow_neg ht0.le, one_div]
+  simp only [WeakFEPair.f_modif, hurwitzEvenFEPair, Function.comp_apply, Pi.add_apply,
+    Set.indicator_of_notMem hnotIoi, Set.indicator_of_mem ht, zero_add, one_mul, smul_eq_mul,
+    mul_one]
+  rw [show ((evenKernel 0 t : ℝ) : ℂ) - ((t ^ (-(1 / 2) : ℝ) : ℝ) : ℂ)
+      = ((evenKernel 0 t - t ^ (-(1 / 2) : ℝ) : ℝ) : ℂ) by push_cast; ring,
+    Complex.norm_real, Real.norm_eq_abs, hfe]
+  rw [show t ^ (-(1 / 2) : ℝ) * evenKernel 0 (1 / t) - t ^ (-(1 / 2) : ℝ)
+      = t ^ (-(1 / 2) : ℝ) * (evenKernel 0 (1 / t) - 1) by ring, abs_mul,
+    abs_of_nonneg (Real.rpow_nonneg ht0.le _)]
+
 end SIDELvConservation
