@@ -219,4 +219,42 @@ theorem Gamma_le_exp {y : ℝ} (hy : 1 ≤ y) :
     have hy10 : (0 : ℝ) ≤ y - 1 := by linarith
     nlinarith [mul_le_mul_of_nonneg_left hl2 hy10, mul_le_mul_of_nonneg_left hly hy10, hlp, hy10]
 
+/-- **Arithmetic glue (sub-lemma 5).** For `K ≥ 0`, `w·(K + 2·log(w+2))` with `1 ≤ w ≤ n/2+1` fits
+inside `A·(n·log(n+2)) + B` — `n = ‖s‖`, `w = x₊`. The trick that defeats the `n≈0` case-behavior:
+convert every linear term to a log term through the uniform `log(n+2) ≥ log 2 > 0`, so no case split
+is needed. The residual log term is absorbed by `log(n+2) ≤ n+1` (`Real.log_le_sub_one_of_pos` —
+the same `log u ≤ u−1` that killed complex Stirling). No `nlinarith`, no cases. -/
+theorem exp_arg_bound {K : ℝ} (hK : 0 ≤ K) : ∃ A B : ℝ, 0 ≤ A ∧ ∀ n w : ℝ,
+    0 ≤ n → 1 ≤ w → w ≤ n / 2 + 1 →
+      w * (K + 2 * Real.log (w + 2)) ≤ A * (n * Real.log (n + 2)) + B := by
+  have hlog2 : (0 : ℝ) < Real.log 2 := Real.log_pos (by norm_num)
+  have hlog2ne : Real.log 2 ≠ 0 := hlog2.ne'
+  refine ⟨(K + 4) / Real.log 2 + 4, K + 4, by positivity, fun n w hn hw hwn => ?_⟩
+  have hlp : 0 ≤ Real.log (n + 2) := Real.log_nonneg (by linarith)
+  have hl2 : Real.log 2 ≤ Real.log (n + 2) := Real.log_le_log (by norm_num) (by linarith)
+  have hlwp : 0 ≤ Real.log (w + 2) := Real.log_nonneg (by linarith)
+  have hlw : Real.log (w + 2) ≤ 2 * Real.log (n + 2) := by
+    calc Real.log (w + 2) ≤ Real.log ((n + 2) ^ 2) := Real.log_le_log (by linarith) (by nlinarith)
+      _ = 2 * Real.log (n + 2) := by rw [Real.log_pow]; push_cast; ring
+  have hlub : Real.log (n + 2) ≤ n + 1 := by
+    have := Real.log_le_sub_one_of_pos (show (0 : ℝ) < n + 2 by linarith); linarith
+  have hn_conv : n * Real.log 2 ≤ n * Real.log (n + 2) := mul_le_mul_of_nonneg_left hl2 hn
+  have hw1 : w ≤ n + 1 := by linarith
+  have step1 : w * (K + 2 * Real.log (w + 2)) ≤ (n + 1) * (K + 4 * Real.log (n + 2)) :=
+    mul_le_mul hw1 (by linarith) (by linarith) (by linarith)
+  have hKn : K * n ≤ (K / Real.log 2) * (n * Real.log (n + 2)) := by
+    calc K * n = (K / Real.log 2) * (n * Real.log 2) := by field_simp
+      _ ≤ _ := mul_le_mul_of_nonneg_left hn_conv (by positivity)
+  have h4n : (4 : ℝ) * n ≤ (4 / Real.log 2) * (n * Real.log (n + 2)) := by
+    calc (4 : ℝ) * n = (4 / Real.log 2) * (n * Real.log 2) := by field_simp
+      _ ≤ _ := mul_le_mul_of_nonneg_left hn_conv (by positivity)
+  calc w * (K + 2 * Real.log (w + 2))
+      ≤ (n + 1) * (K + 4 * Real.log (n + 2)) := step1
+    _ = K * n + K + 4 * (n * Real.log (n + 2)) + 4 * Real.log (n + 2) := by ring
+    _ ≤ (K / Real.log 2) * (n * Real.log (n + 2)) + K + 4 * (n * Real.log (n + 2))
+          + ((4 / Real.log 2) * (n * Real.log (n + 2)) + 4) := by
+        have h1 : 4 * Real.log (n + 2) ≤ 4 * (n + 1) := by linarith
+        linarith [hKn, h4n, h1]
+    _ = ((K + 4) / Real.log 2 + 4) * (n * Real.log (n + 2)) + (K + 4) := by field_simp; ring
+
 end SIDELvConservation

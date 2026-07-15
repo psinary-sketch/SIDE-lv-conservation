@@ -54,3 +54,4 @@ open SIDELvConservation
 #print axioms SIDELvConservation.norm_f_modif_ioi_one_integral_le -- sub-lemma 2: Ioi 1 Γ-bound
 #print axioms SIDELvConservation.norm_f_modif_ioo_integral_le -- sub-lemma 3: Ioo majorant bound
 #print axioms SIDELvConservation.Gamma_le_exp -- sub-lemma 4: Γ y ≤ exp(2y·log(y+2))
+#print axioms SIDELvConservation.exp_arg_bound -- sub-lemma 5: exp-argument arithmetic glue (staged, no nlinarith)
