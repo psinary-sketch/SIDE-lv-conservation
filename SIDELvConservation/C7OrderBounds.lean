@@ -138,4 +138,63 @@ theorem integrableOn_rpow_mul_exp_Ioi {a p : ℝ} (ha : 0 < a) (hp : 0 < p) :
     rw [Real.mul_rpow hp.le ht.le, mul_assoc, inv_mul_cancel_left₀ hpne]
   exact MeasureTheory.IntegrableOn.congr_fun (key.const_mul (p ^ (a - 1))⁻¹) heq measurableSet_Ioi
 
+/-- **`Ioi 1` Γ-bound.** The growth-carrying tail: `∫_{Ioi 1} t^{x−1}·‖f_modif t‖ ≤ Cd·(1/p)^{x₊}·Γ x₊`
+with `x₊ = max x 1`. On `Ioi 1`, `‖f_modif t‖ = |ek 0 t − 1| ≤ Cd·e^{−pt}` (domination) and
+`t^{x−1} ≤ t^{x₊−1}` (t ≥ 1), then `∫_{Ioi 1} ≤ ∫_{Ioi 0} = (1/p)^{x₊}·Γ x₊`. The `x₊` keeps the Γ
+argument `≥ 1` regardless of sign of `x`. -/
+theorem norm_f_modif_ioi_one_integral_le {p Cd x : ℝ} (hp : 0 < p) (hCd : 0 ≤ Cd)
+    (hdom : ∀ t : ℝ, 1 ≤ t → |evenKernel 0 t - 1| ≤ Cd * Real.exp (-(p * t)))
+    (hint : MeasureTheory.IntegrableOn
+      (fun t => t ^ (x - 1) * ‖(hurwitzEvenFEPair 0).f_modif t‖) (Set.Ioi 1)) :
+    (∫ t in Set.Ioi (1 : ℝ), t ^ (x - 1) * ‖(hurwitzEvenFEPair 0).f_modif t‖)
+      ≤ Cd * (1 / p) ^ (max x 1) * Real.Gamma (max x 1) := by
+  set y := max x 1 with hy
+  have hy1 : (1 : ℝ) ≤ y := le_max_right _ _
+  have hy0 : 0 < y := lt_of_lt_of_le one_pos hy1
+  have hyx : x ≤ y := le_max_left _ _
+  have hR0 : MeasureTheory.IntegrableOn
+      (fun t : ℝ => t ^ (y - 1) * Real.exp (-(p * t))) (Set.Ioi 0) :=
+    integrableOn_rpow_mul_exp_Ioi hy0 hp
+  have hRint : MeasureTheory.IntegrableOn
+      (fun t : ℝ => Cd * (t ^ (y - 1) * Real.exp (-(p * t)))) (Set.Ioi 1) :=
+    (hR0.mono_set (Set.Ioi_subset_Ioi zero_le_one)).const_mul Cd
+  calc (∫ t in Set.Ioi (1 : ℝ), t ^ (x - 1) * ‖(hurwitzEvenFEPair 0).f_modif t‖)
+      ≤ ∫ t in Set.Ioi (1 : ℝ), Cd * (t ^ (y - 1) * Real.exp (-(p * t))) := by
+        refine MeasureTheory.setIntegral_mono_on hint hRint measurableSet_Ioi (fun t ht => ?_)
+        rw [Set.mem_Ioi] at ht
+        rw [norm_f_modif_of_one_lt ht]
+        have h1 : |evenKernel 0 t - 1| ≤ Cd * Real.exp (-(p * t)) := hdom t ht.le
+        have h2 : t ^ (x - 1) ≤ t ^ (y - 1) :=
+          Real.rpow_le_rpow_of_exponent_le ht.le (by linarith)
+        calc t ^ (x - 1) * |evenKernel 0 t - 1|
+            ≤ t ^ (y - 1) * (Cd * Real.exp (-(p * t))) :=
+              mul_le_mul h2 h1 (abs_nonneg _) (by positivity)
+          _ = Cd * (t ^ (y - 1) * Real.exp (-(p * t))) := by ring
+    _ = Cd * ∫ t in Set.Ioi (1 : ℝ), t ^ (y - 1) * Real.exp (-(p * t)) :=
+        MeasureTheory.integral_const_mul _ _
+    _ ≤ Cd * ∫ t in Set.Ioi (0 : ℝ), t ^ (y - 1) * Real.exp (-(p * t)) := by
+        refine mul_le_mul_of_nonneg_left ?_ hCd
+        refine MeasureTheory.setIntegral_mono_set hR0 ?_ ?_
+        · filter_upwards [MeasureTheory.self_mem_ae_restrict measurableSet_Ioi] with t ht
+          rw [Set.mem_Ioi] at ht
+          positivity
+        · exact (HasSubset.Subset.eventuallyLE (Set.Ioi_subset_Ioi zero_le_one))
+    _ = Cd * ((1 / p) ^ y * Real.Gamma y) := by rw [Real.integral_rpow_mul_exp_neg_mul_Ioi hy0 hp]
+    _ = Cd * (1 / p) ^ y * Real.Gamma y := by ring
+
+/-- **`Ioo 0 1` bound by a fixed majorant.** For `re s ≥ ½` (so `x ≥ ¼`), the head integral is
+uniformly `≤ M₀ := ∫_{Ioo 0 1} t^{−3/4}·‖f_modif t‖` — a constant independent of `s`. The sign-flip
+`t^{x−1} ≤ t^{−3/4}` holds precisely because `t < 1` and `x−1 ≥ −3/4`. -/
+theorem norm_f_modif_ioo_integral_le {x : ℝ} (hx : (1 : ℝ) / 4 ≤ x)
+    (hint : MeasureTheory.IntegrableOn
+      (fun t => t ^ (x - 1) * ‖(hurwitzEvenFEPair 0).f_modif t‖) (Set.Ioo 0 1))
+    (hmaj : MeasureTheory.IntegrableOn
+      (fun t => t ^ (-(3 : ℝ) / 4) * ‖(hurwitzEvenFEPair 0).f_modif t‖) (Set.Ioo 0 1)) :
+    (∫ t in Set.Ioo (0 : ℝ) 1, t ^ (x - 1) * ‖(hurwitzEvenFEPair 0).f_modif t‖)
+      ≤ ∫ t in Set.Ioo (0 : ℝ) 1, t ^ (-(3 : ℝ) / 4) * ‖(hurwitzEvenFEPair 0).f_modif t‖ := by
+  refine MeasureTheory.setIntegral_mono_on hint hmaj measurableSet_Ioo (fun t ht => ?_)
+  have h : t ^ (x - 1) ≤ t ^ (-(3 : ℝ) / 4) :=
+    Real.rpow_le_rpow_of_exponent_ge ht.1 ht.2.le (by linarith)
+  exact mul_le_mul_of_nonneg_right h (norm_nonneg _)
+
 end SIDELvConservation

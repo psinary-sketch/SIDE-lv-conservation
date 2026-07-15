@@ -51,3 +51,5 @@ open SIDELvConservation
 #print axioms SIDELvConservation.norm_f_modif_of_one_lt -- brick 3 gateway: ‖f_modif t‖ = |ek 0 t - 1| on Ioi 1
 #print axioms SIDELvConservation.norm_f_modif_of_mem_Ioo -- brick 3 gateway: FE fold on Ioo 0 1
 #print axioms SIDELvConservation.integrableOn_rpow_mul_exp_Ioi -- sub-lemma 1: scaled-Γ tail integrability
+#print axioms SIDELvConservation.norm_f_modif_ioi_one_integral_le -- sub-lemma 2: Ioi 1 Γ-bound
+#print axioms SIDELvConservation.norm_f_modif_ioo_integral_le -- sub-lemma 3: Ioo majorant bound
