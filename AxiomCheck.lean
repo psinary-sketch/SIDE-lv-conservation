@@ -1,6 +1,7 @@
 import SIDELvConservation.T1_MellinFactorization
 import SIDELvConservation.T2_SDarkness
 import SIDELvConservation.T3_StepNineBridge
+import SIDELvConservation.GammaBounds
 
 /-!
 # Axiom audit
@@ -35,3 +36,7 @@ open SIDELvConservation
 -- T3′ (Determination-shared-witness bridge) and T3″ (countermodel), added v0.2.0
 #print axioms T3.T3prime_shared_witness
 #print axioms T3.T3doubleprime_general_commutation_fails
+
+-- W-8 (C₇-order execution): complex-Gamma norm bounds — first brick.
+-- Expected Mathlib base only (`propext`, `Classical.choice`, `Quot.sound`), no `sorryAx`.
+#print axioms Complex.norm_Gamma_le_Gamma_re
