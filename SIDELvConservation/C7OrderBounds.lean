@@ -1,4 +1,5 @@
 import SIDELvConservation.T1_MellinFactorization
+import SIDELvConservation.GammaBounds
 
 /-!
 # W-8: exponential domination of the theta remainder `Φ`
@@ -196,5 +197,26 @@ theorem norm_f_modif_ioo_integral_le {x : ℝ} (hx : (1 : ℝ) / 4 ≤ x)
   have h : t ^ (x - 1) ≤ t ^ (-(3 : ℝ) / 4) :=
     Real.rpow_le_rpow_of_exponent_ge ht.1 ht.2.le (by linarith)
   exact mul_le_mul_of_nonneg_right h (norm_nonneg _)
+
+/-- **Γ→exp.** For `1 ≤ y`, `Γ y ≤ exp(2·y·log(y+2))` — feeding `Real.Gamma_le_two_mul_rpow` into
+the corrected conjunct's `exp(A·…·log(…))` shape. The `y = 1` boundary (where the rpow base is `0`)
+is case-split off before the log manipulation. -/
+theorem Gamma_le_exp {y : ℝ} (hy : 1 ≤ y) :
+    Real.Gamma y ≤ Real.exp (2 * y * Real.log (y + 2)) := by
+  rcases eq_or_lt_of_le hy with rfl | hy1
+  · rw [Real.Gamma_one]
+    exact Real.one_le_exp_iff.mpr (by nlinarith [Real.log_nonneg (show (1 : ℝ) ≤ 1 + 2 by norm_num)])
+  · have hy1' : (0 : ℝ) < y - 1 := by linarith
+    refine (Real.Gamma_le_two_mul_rpow hy).trans ?_
+    rw [← Real.exp_log (show (0 : ℝ) < 2 * (2 * (y - 1) / Real.exp 1) ^ (y - 1) by positivity)]
+    apply Real.exp_le_exp.mpr
+    rw [Real.log_mul (by norm_num) (by positivity), Real.log_rpow (by positivity),
+      Real.log_div (by positivity) (Real.exp_ne_zero _), Real.log_exp,
+      Real.log_mul (by norm_num) (by linarith)]
+    have hl2 : Real.log 2 ≤ Real.log (y + 2) := Real.log_le_log (by norm_num) (by linarith)
+    have hly : Real.log (y - 1) ≤ Real.log (y + 2) := Real.log_le_log (by linarith) (by linarith)
+    have hlp : (0 : ℝ) ≤ Real.log (y + 2) := Real.log_nonneg (by linarith)
+    have hy10 : (0 : ℝ) ≤ y - 1 := by linarith
+    nlinarith [mul_le_mul_of_nonneg_left hl2 hy10, mul_le_mul_of_nonneg_left hly hy10, hlp, hy10]
 
 end SIDELvConservation

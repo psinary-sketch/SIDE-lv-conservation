@@ -53,3 +53,4 @@ open SIDELvConservation
 #print axioms SIDELvConservation.integrableOn_rpow_mul_exp_Ioi -- sub-lemma 1: scaled-Γ tail integrability
 #print axioms SIDELvConservation.norm_f_modif_ioi_one_integral_le -- sub-lemma 2: Ioi 1 Γ-bound
 #print axioms SIDELvConservation.norm_f_modif_ioo_integral_le -- sub-lemma 3: Ioo majorant bound
+#print axioms SIDELvConservation.Gamma_le_exp -- sub-lemma 4: Γ y ≤ exp(2y·log(y+2))
