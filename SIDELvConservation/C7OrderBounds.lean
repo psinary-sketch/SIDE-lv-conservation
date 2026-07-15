@@ -118,4 +118,24 @@ theorem norm_f_modif_of_mem_Ioo {t : ℝ} (ht : t ∈ Set.Ioo (0 : ℝ) 1) :
       = t ^ (-(1 / 2) : ℝ) * (evenKernel 0 (1 / t) - 1) by ring, abs_mul,
     abs_of_nonneg (Real.rpow_nonneg ht0.le _)]
 
+/-- **Scaled-Γ tail integrability.** For `0 < a`, `0 < p`, the integrand `t^{a−1}·e^{−pt}` is
+integrable on `Ioi 0` — from `Real.GammaIntegral_convergent` via the `t ↦ p·t` scaling, proved
+set-level (positive `t` only) so `Real.mul_rpow` applies and the `rpow`-of-negatives class never fires. -/
+theorem integrableOn_rpow_mul_exp_Ioi {a p : ℝ} (ha : 0 < a) (hp : 0 < p) :
+    MeasureTheory.IntegrableOn (fun t : ℝ => t ^ (a - 1) * Real.exp (-(p * t))) (Set.Ioi 0) := by
+  have key : MeasureTheory.IntegrableOn
+      (fun x : ℝ => (p * x) ^ (a - 1) * Real.exp (-(p * x))) (Set.Ioi 0) := by
+    have h := (MeasureTheory.integrableOn_Ioi_comp_mul_left_iff
+      (fun u : ℝ => u ^ (a - 1) * Real.exp (-u)) 0 hp).mpr
+    rw [mul_zero] at h
+    exact h (by simpa only [mul_comm] using Real.GammaIntegral_convergent ha)
+  have hpne : (p : ℝ) ^ (a - 1) ≠ 0 := by positivity
+  have heq : Set.EqOn (fun x : ℝ => (p ^ (a - 1))⁻¹ * ((p * x) ^ (a - 1) * Real.exp (-(p * x))))
+      (fun t : ℝ => t ^ (a - 1) * Real.exp (-(p * t))) (Set.Ioi 0) := by
+    intro t ht
+    rw [Set.mem_Ioi] at ht
+    dsimp only
+    rw [Real.mul_rpow hp.le ht.le, mul_assoc, inv_mul_cancel_left₀ hpne]
+  exact MeasureTheory.IntegrableOn.congr_fun (key.const_mul (p ^ (a - 1))⁻¹) heq measurableSet_Ioi
+
 end SIDELvConservation

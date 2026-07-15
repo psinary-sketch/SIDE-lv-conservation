@@ -50,3 +50,4 @@ open SIDELvConservation
 #print axioms SIDELvConservation.norm_completedRiemannZeta₀_le -- brick 3: ‖Λ₀ s‖ ≤ ½·∫ t^(re(s/2)-1)‖f_modif‖
 #print axioms SIDELvConservation.norm_f_modif_of_one_lt -- brick 3 gateway: ‖f_modif t‖ = |ek 0 t - 1| on Ioi 1
 #print axioms SIDELvConservation.norm_f_modif_of_mem_Ioo -- brick 3 gateway: FE fold on Ioo 0 1
+#print axioms SIDELvConservation.integrableOn_rpow_mul_exp_Ioi -- sub-lemma 1: scaled-Γ tail integrability
