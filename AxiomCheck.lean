@@ -42,3 +42,4 @@ open SIDELvConservation
 #print axioms Complex.norm_Gamma_le_Gamma_re            -- brick 1: ‖Γ z‖ ≤ Γ(re z)
 #print axioms Complex.norm_riemannZeta_le_tsum          -- brick 2: ‖ζ s‖ ≤ ∑ 1/n^(re s)
 #print axioms Complex.norm_completedZeta₀_le_of_re_eq_two -- edge bound: ‖Λ₀‖ ≤ π/6 + 3/2 on re s = 2
+#print axioms Complex.norm_completedZeta₀_le_of_re_eq_neg_one -- reflected edge on re s = -1 (via FE)

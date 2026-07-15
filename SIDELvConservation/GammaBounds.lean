@@ -124,4 +124,13 @@ theorem norm_completedZeta₀_le_of_re_eq_two {s : ℂ} (hs : s.re = 2) :
     _ ≤ Real.pi⁻¹ * (∑' n : ℕ, 1 / (n : ℝ) ^ (2 : ℝ)) + 1 / 2 + 1 := by gcongr
     _ = Real.pi⁻¹ * (∑' n : ℕ, 1 / (n : ℝ) ^ (2 : ℝ)) + 3 / 2 := by ring
 
+/-- **Reflected edge on `re s = -1`**, free from the edge bound via the functional equation. Since
+`completedRiemannZeta₀ (1 - s) = completedRiemannZeta₀ s` (`completedRiemannZeta₀_one_sub`) and
+`re (1 - s) = 2` when `re s = -1`, the `re s = 2` bound transports unchanged: the same explicit
+constant `π/6 + 3/2` bounds `‖Λ₀‖` on the left edge of the critical strip. -/
+theorem norm_completedZeta₀_le_of_re_eq_neg_one {s : ℂ} (hs : s.re = -1) :
+    ‖completedRiemannZeta₀ s‖ ≤ Real.pi⁻¹ * (∑' n : ℕ, 1 / (n : ℝ) ^ (2 : ℝ)) + 3 / 2 := by
+  rw [← completedRiemannZeta₀_one_sub s]
+  exact norm_completedZeta₀_le_of_re_eq_two (by rw [sub_re, one_re, hs]; norm_num)
+
 end Complex
