@@ -134,3 +134,64 @@ theorem norm_completedZeta₀_le_of_re_eq_neg_one {s : ℂ} (hs : s.re = -1) :
   exact norm_completedZeta₀_le_of_re_eq_two (by rw [sub_re, one_re, hs]; norm_num)
 
 end Complex
+
+namespace Real
+
+/-- **Real-Gamma growth** — the classical order-one proof's last ingredient, and the only genuinely
+new real-analysis fact in the W-8 route (no complex Stirling). For `1 ≤ a`,
+`Γ a ≤ 2 · (2(a-1)/e)^(a-1)`.
+
+The proof dominates the Gamma integrand by its maximum times a half-weight:
+`t^{a-1}·e^{-t} ≤ (2(a-1)/e)^{a-1}·e^{-t/2}` on `Ioi 0`, the pointwise bound `t^{a-1}·e^{-t/2} ≤
+(2(a-1)/e)^{a-1}` reducing after logs to `log u ≤ u - 1` (`Real.log_le_sub_one_of_pos`) at
+`u = t/(2(a-1))`; then `∫₀^∞ e^{-t/2} = 2`. The logarithm of the bound sits inside `A·a·log(a+2)`,
+the corrected C₇-order conjunct's form. -/
+theorem Gamma_le_two_mul_rpow {a : ℝ} (ha : 1 ≤ a) :
+    Gamma a ≤ 2 * (2 * (a - 1) / exp 1) ^ (a - 1) := by
+  have hc0 : 0 ≤ a - 1 := by linarith
+  set C := (2 * (a - 1) / exp 1) ^ (a - 1) with hC
+  have hmax : ∀ t : ℝ, 0 < t → t ^ (a - 1) * exp (-t / 2) ≤ C := by
+    intro t ht
+    rcases eq_or_lt_of_le hc0 with h0 | hpos
+    · rw [hC, ← h0, rpow_zero, rpow_zero, one_mul]
+      exact exp_le_one_iff.mpr (by linarith)
+    · rw [← log_le_log_iff (by positivity) (by rw [hC]; positivity),
+        log_mul (by positivity) (exp_ne_zero _), log_rpow ht, log_exp, hC,
+        log_rpow (by positivity), log_div (by positivity) (exp_ne_zero _), log_exp]
+      have hlog := log_le_sub_one_of_pos (show (0:ℝ) < t / (2 * (a - 1)) by positivity)
+      rw [log_div (by positivity) (by positivity)] at hlog
+      have hmul := mul_le_mul_of_nonneg_left hlog hc0
+      have hsimp : (a - 1) * (t / (2 * (a - 1)) - 1) = t / 2 - (a - 1) := by
+        field_simp
+      rw [hsimp] at hmul
+      nlinarith [hmul]
+  have hdom : ∀ t ∈ Set.Ioi (0 : ℝ), exp (-t) * t ^ (a - 1) ≤ C * exp (-t / 2) := by
+    intro t ht
+    rw [Set.mem_Ioi] at ht
+    have h1 := mul_le_mul_of_nonneg_right (hmax t ht) (exp_pos (-t / 2)).le
+    rw [mul_assoc, ← exp_add, show -t / 2 + -t / 2 = -t by ring] at h1
+    rwa [mul_comm (exp (-t)) (t ^ (a - 1))]
+  have hexp_int : MeasureTheory.IntegrableOn (fun t => exp (-t / 2)) (Set.Ioi (0 : ℝ)) := by
+    have h := integrableOn_exp_mul_Ioi (a := (-1 / 2 : ℝ)) (by norm_num) 0
+    refine h.congr_fun (fun t _ => ?_) measurableSet_Ioi
+    rw [show (-1 / 2 : ℝ) * t = -t / 2 by ring]
+  have hExpInt : ∫ t in Set.Ioi (0 : ℝ), exp (-t / 2) = 2 := by
+    have h := integral_rpow_mul_exp_neg_mul_Ioi (a := (1 : ℝ)) (r := 1 / 2) one_pos (by norm_num)
+    rw [Gamma_one, mul_one, show ((1 : ℝ) / (1 / 2)) = 2 by norm_num, rpow_one] at h
+    calc ∫ t in Set.Ioi (0 : ℝ), exp (-t / 2)
+        = ∫ t in Set.Ioi (0 : ℝ), t ^ ((1 : ℝ) - 1) * exp (-(1 / 2 * t)) := by
+          apply MeasureTheory.setIntegral_congr_fun measurableSet_Ioi
+          intro t _
+          simp only [sub_self, rpow_zero, one_mul]
+          congr 1; ring
+      _ = 2 := h
+  rw [Gamma_eq_integral (by linarith : (0 : ℝ) < a)]
+  calc ∫ t in Set.Ioi (0 : ℝ), exp (-t) * t ^ (a - 1)
+      ≤ ∫ t in Set.Ioi (0 : ℝ), C * exp (-t / 2) :=
+        MeasureTheory.setIntegral_mono_on (GammaIntegral_convergent (by linarith))
+          (hexp_int.const_mul C) measurableSet_Ioi hdom
+    _ = C * ∫ t in Set.Ioi (0 : ℝ), exp (-t / 2) := MeasureTheory.integral_const_mul C _
+    _ = C * 2 := by rw [hExpInt]
+    _ = 2 * C := by ring
+
+end Real
