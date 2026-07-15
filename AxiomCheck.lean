@@ -2,6 +2,7 @@ import SIDELvConservation.T1_MellinFactorization
 import SIDELvConservation.T2_SDarkness
 import SIDELvConservation.T3_StepNineBridge
 import SIDELvConservation.GammaBounds
+import SIDELvConservation.C7OrderBounds
 
 /-!
 # Axiom audit
@@ -44,3 +45,4 @@ open SIDELvConservation
 #print axioms Complex.norm_completedZeta₀_le_of_re_eq_two -- edge bound: ‖Λ₀‖ ≤ π/6 + 3/2 on re s = 2
 #print axioms Complex.norm_completedZeta₀_le_of_re_eq_neg_one -- reflected edge on re s = -1 (via FE)
 #print axioms Real.Gamma_le_two_mul_rpow -- real-Γ growth (log u ≤ u-1); the classical order-1 ingredient
+#print axioms SIDELvConservation.exists_norm_Phi_le -- W-8 domination: ‖Φ t‖ ≤ C·e^(-p t) on [1,∞)

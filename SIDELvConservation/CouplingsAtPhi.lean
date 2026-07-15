@@ -260,10 +260,12 @@ order-≤1 / maximal-type bound **holds** of it — the Γ real-axis growth `exp
 this form, and genus-1 Hadamard consumes order ≤ 1.  The old finite-type form did **not** hold of the
 same witness; that is why it was corrected, not merely left open. -/
 theorem C7_order_at_Phi : C7_order Phi := by
-  sorry -- OPEN: needs (1) complex-Stirling bound ‖Γ(s/2)‖ ≤ exp(A‖s‖ log‖s‖) — Mathlib has NO norm
-        -- bound on Complex.Gamma and no Gamma/Stirling file; (2) finite order of ζ in the strip via
-        -- PhragmenLindelof.vertical_strip (a maximum principle — a tool, not the ingredient).
-        -- Statement CORRECTED 2026-07-14 to true order ≤ 1 (was false finite-type — W-8 STOP).
+  sorry -- OPEN: W-8 route (in-kernel, theta-Mellin — no complex Stirling, no Phragmén–Lindelöf; both
+        -- retired from the plan). Remaining after the v0.3.1 statement correction: exponential
+        -- domination of Φ (`C7OrderBounds.exists_norm_Phi_le`, landed) → C₃-fold symmetric
+        -- representation Λ₀ s = ∫₁^∞ Φ(t)·(t^(s/2−1) + t^((1−s)/2−1)) dt with its entirety sub-brick →
+        -- Gamma-integral bound (`integral_rpow_mul_exp_neg_mul_Ioi`) → assembly against
+        -- `Real.Gamma_le_two_mul_rpow`. Statement CORRECTED 2026-07-14 to true order ≤ 1 (W-8 STOP).
 
 /-! ## What C₄ and C₅ are, and are not
 
