@@ -46,3 +46,5 @@ open SIDELvConservation
 #print axioms Complex.norm_completedZeta₀_le_of_re_eq_neg_one -- reflected edge on re s = -1 (via FE)
 #print axioms Real.Gamma_le_two_mul_rpow -- real-Γ growth (log u ≤ u-1); the classical order-1 ingredient
 #print axioms SIDELvConservation.exists_norm_Phi_le -- W-8 domination: ‖Φ t‖ ≤ C·e^(-p t) on [1,∞)
+#print axioms SIDELvConservation.completedRiemannZeta₀_eq_half_mellin -- brick 3: Λ₀ = ½·mellin f_modif (rfl)
+#print axioms SIDELvConservation.norm_completedRiemannZeta₀_le -- brick 3: ‖Λ₀ s‖ ≤ ½·∫ t^(re(s/2)-1)‖f_modif‖

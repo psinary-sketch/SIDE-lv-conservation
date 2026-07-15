@@ -66,4 +66,27 @@ theorem exists_norm_Phi_le :
         apply div_le_div_of_nonneg_right hkey; norm_num
     _ = max c M / 2 * Real.exp (-p * t) := by ring
 
+/-- **Reduction (brick 3 foundation).** `completedRiemannZeta₀ s = ½ · mellin f_modif (s/2)`, where
+`f_modif` is `(hurwitzEvenFEPair 0).f_modif` — the `Ioi 1`/`Ioo 0 1` split kernel. Definitional:
+`completedRiemannZeta₀ = completedHurwitzZetaEven₀ 0`, `= (hurwitzEvenFEPair 0).Λ₀ (s/2) / 2`, and
+`WeakFEPair.Λ₀ = mellin f_modif`. This is the entire-function representation Mathlib already carries;
+the growth bound consumes it without re-deriving Riemann's continuation or proving entirety. -/
+theorem completedRiemannZeta₀_eq_half_mellin (s : ℂ) :
+    completedRiemannZeta₀ s = mellin (hurwitzEvenFEPair 0).f_modif (s / 2) / 2 := rfl
+
+/-- **Norm-Mellin bound (brick 3, step 2).** `‖Λ₀ s‖ ≤ ½ · ∫₀^∞ t^{re(s/2)−1}·‖f_modif t‖ dt`,
+pushing the norm through the Mellin integral (`norm_integral_le_integral_norm`) and the pointwise
+`‖(t:ℂ)^{s/2−1} • f_modif t‖ = t^{re(s/2)−1}·‖f_modif t‖` on `Ioi 0`. The `½` is the Hurwitz
+normalization; it washes into the existential `C` at assembly. -/
+theorem norm_completedRiemannZeta₀_le (s : ℂ) :
+    ‖completedRiemannZeta₀ s‖
+      ≤ (∫ t in Ioi (0 : ℝ), t ^ ((s / 2).re - 1) * ‖(hurwitzEvenFEPair 0).f_modif t‖) / 2 := by
+  rw [completedRiemannZeta₀_eq_half_mellin, norm_div, show ‖(2 : ℂ)‖ = 2 by norm_num]
+  gcongr
+  rw [mellin]
+  refine (norm_integral_le_integral_norm _).trans_eq ?_
+  refine setIntegral_congr_fun measurableSet_Ioi (fun t ht => ?_)
+  rw [Set.mem_Ioi] at ht
+  rw [norm_smul, Complex.norm_cpow_eq_rpow_re_of_pos ht, Complex.sub_re, Complex.one_re]
+
 end SIDELvConservation
