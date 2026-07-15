@@ -37,6 +37,8 @@ open SIDELvConservation
 #print axioms T3.T3prime_shared_witness
 #print axioms T3.T3doubleprime_general_commutation_fails
 
--- W-8 (C₇-order execution): complex-Gamma norm bounds — first brick.
+-- W-8 (C₇-order execution): vertical-line norm bounds for the Hadamard input.
 -- Expected Mathlib base only (`propext`, `Classical.choice`, `Quot.sound`), no `sorryAx`.
-#print axioms Complex.norm_Gamma_le_Gamma_re
+#print axioms Complex.norm_Gamma_le_Gamma_re            -- brick 1: ‖Γ z‖ ≤ Γ(re z)
+#print axioms Complex.norm_riemannZeta_le_tsum          -- brick 2: ‖ζ s‖ ≤ ∑ 1/n^(re s)
+#print axioms Complex.norm_completedZeta₀_le_of_re_eq_two -- edge bound: ‖Λ₀‖ ≤ π/6 + 3/2 on re s = 2
