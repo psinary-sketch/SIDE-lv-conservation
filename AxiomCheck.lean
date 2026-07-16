@@ -3,6 +3,7 @@ import SIDELvConservation.T2_SDarkness
 import SIDELvConservation.T3_StepNineBridge
 import SIDELvConservation.GammaBounds
 import SIDELvConservation.C7OrderBounds
+import SIDELvConservation.CouplingsAtPhi
 
 /-!
 # Axiom audit
@@ -58,3 +59,4 @@ open SIDELvConservation
 #print axioms SIDELvConservation.exists_norm_completedRiemannZeta₀_le_exp_half -- growth bound on re s ≥ 1/2
 #print axioms SIDELvConservation.reflect_arith -- reflection arithmetic
 #print axioms SIDELvConservation.exists_norm_completedRiemannZeta₀_le_exp -- C7-order growth conjunct, all s
+#print axioms SIDELvConservation.C7_order_at_Phi -- THE TERMINAL: C7-order discharged at Phi

@@ -26,15 +26,16 @@ STATUS AT THIS COMMIT (honest; see the per-class comments):
                                               `differentiableAt_jacobiTheta₂_snd`)
   C₇-ENTIRETY entire completion of the Mellin transform  PROVED (`C7_entirety_at_Phi`, via
                                               `differentiable_completedZeta₀` + T1)
-  C₇-ORDER    the order-≤1 growth bound       OPEN (`sorry`) — priced: Stirling control of Γ (NOT in
-                                              Mathlib at all) + finite order of ζ in the strip.
-                                              PhragmenLindelof.vertical_strip exists but is a
-                                              maximum principle, not a source of order bounds.
+  C₇-ORDER    the order-≤1 growth bound       PROVED (`C7_order_at_Phi`, W-8 theta-Mellin route: the
+                                              order-≤1 growth of Λ₀ is read off its own Mellin
+                                              representation `Λ₀ = ½·mellin f_modif(s/2)` through the
+                                              even theta kernel, whose exponential decay IS in
+                                              Mathlib — no complex Stirling, no Phragmén–Lindelöf.
 
-SIX discharges now stand at the fixed witness Φ: C₁, C₂, C₃, C₅-input, C₆, C₇-entirety.
-The h1 obligation of `T3prime_shared_witness` is NOT complete: `sevenClasses` carries `C7_order`
-(the class's real content), which is open, and C₄ is unproved.  Two classes short, and the file
-says so rather than counting halves as wholes.
+SEVEN discharges now stand at the fixed witness Φ: C₁, C₂, C₃, C₅-input, C₆, C₇-entirety, C₇-order.
+The h1 obligation of `T3prime_shared_witness` stands at everything-but-C₄: `sevenClasses` carries
+`C7_order` (PROVED, W-8, its real content — not the entirety half), and C₄ (modularity) is the only
+class still unattempted.
 
 NOTHING HERE IS A SHELL. Every predicate below is a statement that could be false: no `True`-valued
 coupling, no `fun _ => True`, no hypothesis that is its own conclusion. Where a proof is not
@@ -44,6 +45,7 @@ statement.
 import SIDELvConservation.T1_MellinFactorization
 import SIDELvConservation.T2_SDarkness
 import SIDELvConservation.T3_StepNineBridge
+import SIDELvConservation.C7OrderBounds
 import Mathlib.NumberTheory.Harmonic.EulerMascheroni
 
 open Complex HurwitzZeta Set MeasureTheory
@@ -249,10 +251,12 @@ theorem C7_entirety_at_Phi : C7_entirety Phi := by
   rw [h]
   ring
 
-/-- **C₇-ORDER at Φ — OPEN.**  The order-≤1 (maximal-type) growth bound on the entire completion,
-`‖G s‖ ≤ C · exp (A · ‖s‖ · log (‖s‖ + 2))`.  See `C7_order`'s docstring for the price and for the
-2026-07-14 correction of the statement's form (the earlier finite-exponential-type form was false of
-the forced witness — W-8 sitting-1 STOP).  The statement is carried openly; it is not weakened.
+/-- **C₇-ORDER at Φ — PROVED (W-8, in-kernel theta-Mellin route).**  The order-≤1 (maximal-type)
+growth bound on the entire completion, `‖G s‖ ≤ C · exp (A · ‖s‖ · log (‖s‖ + 2))`, discharged via
+`exists_norm_completedRiemannZeta₀_le_exp`: `Λ₀ = ½·mellin f_modif(s/2)` (definitional), and the
+growth is read off that Mellin integral through the even theta kernel's exponential decay — no complex
+Stirling, no Phragmén–Lindelöf (both retired). The 2026-07-14 correction (finite-type → true order ≤ 1;
+W-8 sitting-1 STOP) made the obligation the true, dischargeable one; here it is discharged.
 
 Truth-plausibility screen (2026-07-14, per the standing rule).  Forced witness
 `G = completedRiemannZeta₀` (pinned by the entirety conjunct + the identity theorem).  The corrected
@@ -260,12 +264,15 @@ order-≤1 / maximal-type bound **holds** of it — the Γ real-axis growth `exp
 this form, and genus-1 Hadamard consumes order ≤ 1.  The old finite-type form did **not** hold of the
 same witness; that is why it was corrected, not merely left open. -/
 theorem C7_order_at_Phi : C7_order Phi := by
-  sorry -- OPEN: W-8 route (in-kernel, theta-Mellin — no complex Stirling, no Phragmén–Lindelöf; both
-        -- retired from the plan). Remaining after the v0.3.1 statement correction: exponential
-        -- domination of Φ (`C7OrderBounds.exists_norm_Phi_le`, landed) → C₃-fold symmetric
-        -- representation Λ₀ s = ∫₁^∞ Φ(t)·(t^(s/2−1) + t^((1−s)/2−1)) dt with its entirety sub-brick →
-        -- Gamma-integral bound (`integral_rpow_mul_exp_neg_mul_Ioi`) → assembly against
-        -- `Real.Gamma_le_two_mul_rpow`. Statement CORRECTED 2026-07-14 to true order ≤ 1 (W-8 STOP).
+  -- PROVED (W-8, in-kernel theta-Mellin route; no complex Stirling, no Phragmén–Lindelöf).
+  -- Witness `completedRiemannZeta₀`: entirety + half-plane identity reuse C7_entirety_at_Phi's proof;
+  -- the growth conjunct is `exists_norm_completedRiemannZeta₀_le_exp` (C7OrderBounds).
+  refine ⟨completedRiemannZeta₀, differentiable_completedZeta₀, ?_,
+    exists_norm_completedRiemannZeta₀_le_exp⟩
+  intro s hs
+  have h := completedRiemannZeta_eq s
+  have hm := completedRiemannZeta_eq_mellinPhi s hs
+  rw [← hm, h]; ring
 
 /-! ## What C₄ and C₅ are, and are not
 
