@@ -257,4 +257,95 @@ theorem exp_arg_bound {K : ℝ} (hK : 0 ≤ K) : ∃ A B : ℝ, 0 ≤ A ∧ ∀ 
         linarith [hKn, h4n, h1]
     _ = ((K + 4) / Real.log 2 + 4) * (n * Real.log (n + 2)) + (K + 4) := by field_simp; ring
 
+/-- **Growth bound on the right half-plane** `re s ≥ ½`: `∃ A C, ‖Λ₀ s‖ ≤ C·exp(A·‖s‖·log(‖s‖+2))`.
+Wires: framework integrability (`toStrongFEPair.hasMellin`), domination (`exists_norm_Phi_le`), the
+`Ioi 0 = Ioc 0 1 ∪ Ioi 1` split, the two piece-bounds, `(1/p)^{x₊} = exp(log(1/p)·x₊)`, `Gamma_le_exp`,
+and `exp_arg_bound`. -/
+theorem exists_norm_completedRiemannZeta₀_le_exp_half :
+    ∃ A C : ℝ, 0 ≤ A ∧ ∀ s : ℂ, 1 / 2 ≤ s.re →
+      ‖completedRiemannZeta₀ s‖ ≤ C * Real.exp (A * (‖s‖ * Real.log (‖s‖ + 2))) := by
+  obtain ⟨p, Cφ, hp, hφ⟩ := exists_norm_Phi_le
+  obtain ⟨A₀, B₀, hA₀0, hA₀⟩ := exp_arg_bound (show (0 : ℝ) ≤ |Real.log (1 / p)| from abs_nonneg _)
+  have hCφ : 0 ≤ Cφ := by
+    by_contra hc; push_neg at hc
+    have h := (hφ 1 le_rfl).trans' (norm_nonneg _)
+    linarith [mul_neg_of_neg_of_pos hc (Real.exp_pos (-p * 1))]
+  have hintg : ∀ w : ℂ, MeasureTheory.IntegrableOn
+      (fun t : ℝ => t ^ (w.re - 1) * ‖(hurwitzEvenFEPair 0).f_modif t‖) (Set.Ioi 0) := fun w => by
+    have h : MeasureTheory.IntegrableOn
+        (fun t : ℝ => ‖(t : ℂ) ^ (w - 1) • (hurwitzEvenFEPair 0).f_modif t‖) (Set.Ioi 0) :=
+      (((hurwitzEvenFEPair 0).toStrongFEPair.hasMellin w).1).norm
+    refine MeasureTheory.IntegrableOn.congr_fun h (fun t ht => ?_) measurableSet_Ioi
+    rw [Set.mem_Ioi] at ht
+    rw [norm_smul, Complex.norm_cpow_eq_rpow_re_of_pos ht, Complex.sub_re, Complex.one_re]
+  have hdom : ∀ t : ℝ, 1 ≤ t → |evenKernel 0 t - 1| ≤ 2 * Cφ * Real.exp (-(p * t)) := fun t ht => by
+    have h := hφ t ht
+    have hPhi : ‖Phi t‖ = |evenKernel 0 t - 1| / 2 := by
+      rw [Phi, show ((evenKernel 0 t : ℂ) - 1) = ((evenKernel 0 t - 1 : ℝ) : ℂ) by push_cast; ring,
+        norm_div, Complex.norm_real, Real.norm_eq_abs]
+      norm_num
+    rw [hPhi] at h
+    rw [show -(p * t) = -p * t by ring]
+    nlinarith [h, Real.exp_pos (-p * t)]
+  have hmajint : MeasureTheory.IntegrableOn
+      (fun t => t ^ (-(3 : ℝ) / 4) * ‖(hurwitzEvenFEPair 0).f_modif t‖) (Set.Ioo 0 1) := by
+    refine MeasureTheory.IntegrableOn.congr_fun ((hintg (1 / 4 : ℂ)).mono_set Set.Ioo_subset_Ioi_self)
+      (fun t _ => ?_) measurableSet_Ioo
+    norm_num
+  set M₀ := ∫ t in Set.Ioo (0 : ℝ) 1, t ^ (-(3 : ℝ) / 4) * ‖(hurwitzEvenFEPair 0).f_modif t‖ with hM₀
+  have hM₀0 : 0 ≤ M₀ :=
+    MeasureTheory.setIntegral_nonneg measurableSet_Ioo (fun t ht => by have := ht.1; positivity)
+  refine ⟨A₀, 2⁻¹ * M₀ + Cφ * Real.exp B₀, hA₀0, fun s hs => ?_⟩
+  set x := (s / 2).re with hxdef
+  have hx14 : 1 / 4 ≤ x := by rw [hxdef, Complex.div_ofNat_re]; linarith
+  set y := max x 1 with hy
+  have hy1 : (1 : ℝ) ≤ y := le_max_right _ _
+  have hy0 : (0 : ℝ) < y := lt_of_lt_of_le one_pos hy1
+  have hxs : x ≤ ‖s‖ / 2 := by
+    rw [hxdef, Complex.div_ofNat_re]; have := Complex.re_le_norm s; linarith
+  have hys : y ≤ ‖s‖ / 2 + 1 := by
+    rw [hy]; rcases le_total x 1 with h | h
+    · rw [max_eq_right h]; linarith [norm_nonneg s]
+    · rw [max_eq_left h]; linarith [hxs]
+  have hsplit : (∫ t in Set.Ioi (0 : ℝ), t ^ (x - 1) * ‖(hurwitzEvenFEPair 0).f_modif t‖)
+      = (∫ t in Set.Ioo (0 : ℝ) 1, t ^ (x - 1) * ‖(hurwitzEvenFEPair 0).f_modif t‖)
+        + ∫ t in Set.Ioi (1 : ℝ), t ^ (x - 1) * ‖(hurwitzEvenFEPair 0).f_modif t‖ := by
+    rw [← Set.Ioc_union_Ioi_eq_Ioi (zero_le_one),
+      MeasureTheory.setIntegral_union (Set.Ioc_disjoint_Ioi le_rfl) measurableSet_Ioi
+        ((hintg (s / 2)).mono_set Set.Ioc_subset_Ioi_self)
+        ((hintg (s / 2)).mono_set (Set.Ioi_subset_Ioi zero_le_one)),
+      MeasureTheory.integral_Ioc_eq_integral_Ioo]
+  have hIoo : (∫ t in Set.Ioo (0 : ℝ) 1, t ^ (x - 1) * ‖(hurwitzEvenFEPair 0).f_modif t‖) ≤ M₀ :=
+    norm_f_modif_ioo_integral_le hx14 ((hintg (s / 2)).mono_set Set.Ioo_subset_Ioi_self) hmajint
+  have hIoi : (∫ t in Set.Ioi (1 : ℝ), t ^ (x - 1) * ‖(hurwitzEvenFEPair 0).f_modif t‖)
+      ≤ 2 * Cφ * (1 / p) ^ y * Real.Gamma y :=
+    norm_f_modif_ioi_one_integral_le hp (by positivity) hdom
+      ((hintg (s / 2)).mono_set (Set.Ioi_subset_Ioi zero_le_one))
+  have hgexp : (1 / p) ^ y * Real.Gamma y
+      ≤ Real.exp (|Real.log (1 / p)| * y + 2 * y * Real.log (y + 2)) := by
+    rw [Real.rpow_def_of_pos (by positivity), Real.exp_add]
+    refine mul_le_mul ?_ (Gamma_le_exp hy1) (Real.Gamma_nonneg_of_nonneg hy0.le) (Real.exp_pos _).le
+    rw [Real.exp_le_exp]
+    exact mul_le_mul_of_nonneg_right (le_abs_self _) hy0.le
+  calc ‖completedRiemannZeta₀ s‖
+      ≤ (∫ t in Set.Ioi (0 : ℝ), t ^ (x - 1) * ‖(hurwitzEvenFEPair 0).f_modif t‖) / 2 :=
+        norm_completedRiemannZeta₀_le s
+    _ ≤ (M₀ + 2 * Cφ * (1 / p) ^ y * Real.Gamma y) / 2 := by rw [hsplit]; gcongr
+    _ = 2⁻¹ * M₀ + Cφ * ((1 / p) ^ y * Real.Gamma y) := by ring
+    _ ≤ (2⁻¹ * M₀ + Cφ * Real.exp B₀) * Real.exp (A₀ * (‖s‖ * Real.log (‖s‖ + 2))) := by
+        have hexp1 : (1 : ℝ) ≤ Real.exp (A₀ * (‖s‖ * Real.log (‖s‖ + 2))) :=
+          Real.one_le_exp (by
+            have : 0 ≤ Real.log (‖s‖ + 2) := Real.log_nonneg (by linarith [norm_nonneg s]); positivity)
+        have hmain : (1 / p) ^ y * Real.Gamma y
+            ≤ Real.exp B₀ * Real.exp (A₀ * (‖s‖ * Real.log (‖s‖ + 2))) := by
+          refine hgexp.trans ?_
+          rw [← Real.exp_add]
+          exact Real.exp_le_exp.mpr (by have := hA₀ ‖s‖ y (norm_nonneg s) hy1 hys; nlinarith [this])
+        rw [add_mul]
+        refine add_le_add (le_mul_of_one_le_right (by positivity) hexp1) ?_
+        calc Cφ * ((1 / p) ^ y * Real.Gamma y)
+            ≤ Cφ * (Real.exp B₀ * Real.exp (A₀ * (‖s‖ * Real.log (‖s‖ + 2)))) :=
+              mul_le_mul_of_nonneg_left hmain hCφ
+          _ = Cφ * Real.exp B₀ * Real.exp (A₀ * (‖s‖ * Real.log (‖s‖ + 2))) := by ring
+
 end SIDELvConservation
