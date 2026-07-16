@@ -348,4 +348,75 @@ theorem exists_norm_completedRiemannZeta₀_le_exp_half :
               mul_le_mul_of_nonneg_left hmain hCφ
           _ = Cφ * Real.exp B₀ * Real.exp (A₀ * (‖s‖ * Real.log (‖s‖ + 2))) := by ring
 
+/-- Reflection arithmetic: `m·log(m+2)` for `0 ≤ m ≤ z+1` fits inside `A·(z·log(z+2)) + B`. Same
+staged linear-to-log conversion as `exp_arg_bound`; used to fold `‖1-s‖ ≤ ‖s‖+1` into the constants. -/
+theorem reflect_arith : ∃ A B : ℝ, 0 ≤ A ∧ ∀ m z : ℝ,
+    0 ≤ z → 0 ≤ m → m ≤ z + 1 → m * Real.log (m + 2) ≤ A * (z * Real.log (z + 2)) + B := by
+  have hlog2 : (0 : ℝ) < Real.log 2 := Real.log_pos (by norm_num)
+  refine ⟨2 + 2 / Real.log 2, 2, by positivity, fun m z hz hm hmz => ?_⟩
+  have hlp : 0 ≤ Real.log (z + 2) := Real.log_nonneg (by linarith)
+  have hl2 : Real.log 2 ≤ Real.log (z + 2) := Real.log_le_log (by norm_num) (by linarith)
+  have hlm : Real.log (m + 2) ≤ 2 * Real.log (z + 2) := by
+    calc Real.log (m + 2) ≤ Real.log ((z + 2) ^ 2) := Real.log_le_log (by linarith) (by nlinarith)
+      _ = 2 * Real.log (z + 2) := by rw [Real.log_pow]; push_cast; ring
+  have hlub : Real.log (z + 2) ≤ z + 1 := by
+    have := Real.log_le_sub_one_of_pos (show (0 : ℝ) < z + 2 by linarith); linarith
+  have hz_conv : z * Real.log 2 ≤ z * Real.log (z + 2) := mul_le_mul_of_nonneg_left hl2 hz
+  have h2z : (2 : ℝ) * z ≤ (2 / Real.log 2) * (z * Real.log (z + 2)) := by
+    calc (2 : ℝ) * z = (2 / Real.log 2) * (z * Real.log 2) := by field_simp
+      _ ≤ _ := mul_le_mul_of_nonneg_left hz_conv (by positivity)
+  calc m * Real.log (m + 2)
+      ≤ (z + 1) * (2 * Real.log (z + 2)) :=
+        mul_le_mul hmz hlm (Real.log_nonneg (by linarith)) (by linarith)
+    _ = 2 * (z * Real.log (z + 2)) + 2 * Real.log (z + 2) := by ring
+    _ ≤ 2 * (z * Real.log (z + 2)) + ((2 / Real.log 2) * (z * Real.log (z + 2)) + 2) := by
+        have h1 : 2 * Real.log (z + 2) ≤ 2 * (z + 1) := by linarith
+        linarith [h2z, h1]
+    _ = (2 + 2 / Real.log 2) * (z * Real.log (z + 2)) + 2 := by field_simp; ring
+
+/-- **C₇-order growth, all of `ℂ`.** `∃ A C, ∀ s, ‖Λ₀ s‖ ≤ C·exp(A·‖s‖·log(‖s‖+2))`. Extends the
+`re s ≥ ½` bound to the whole plane by the functional equation `Λ₀(s) = Λ₀(1-s)`, folding
+`‖1-s‖ ≤ ‖s‖+1` into `A, C` via `reflect_arith`. This is the corrected C₇-order growth conjunct. -/
+theorem exists_norm_completedRiemannZeta₀_le_exp :
+    ∃ A C : ℝ, ∀ s : ℂ, ‖completedRiemannZeta₀ s‖
+      ≤ C * Real.exp (A * (‖s‖ * Real.log (‖s‖ + 2))) := by
+  obtain ⟨A, C, hA0, hb⟩ := exists_norm_completedRiemannZeta₀_le_exp_half
+  obtain ⟨A₁, B₁, hA₁0, hr⟩ := reflect_arith
+  have hC0 : 0 ≤ C := by
+    by_contra hc; push_neg at hc
+    have h := (hb 1 (by norm_num)).trans' (norm_nonneg _)
+    nlinarith [Real.exp_pos (A * (‖(1 : ℂ)‖ * Real.log (‖(1 : ℂ)‖ + 2)))]
+  refine ⟨A * (A₁ + 1), C * (Real.exp (A * B₁) + 1), fun s => ?_⟩
+  have hnn : 0 ≤ ‖s‖ := norm_nonneg _
+  have hlogpos : 0 ≤ Real.log (‖s‖ + 2) := Real.log_nonneg (by linarith)
+  rcases le_or_gt (1 / 2) s.re with hs | hs
+  · refine (hb s hs).trans ?_
+    have h1 : Real.exp (A * (‖s‖ * Real.log (‖s‖ + 2)))
+        ≤ Real.exp (A * (A₁ + 1) * (‖s‖ * Real.log (‖s‖ + 2))) :=
+      Real.exp_le_exp.mpr (by
+        nlinarith [mul_nonneg (mul_nonneg (mul_nonneg hA0 hA₁0) hnn) hlogpos])
+    calc C * Real.exp (A * (‖s‖ * Real.log (‖s‖ + 2)))
+        ≤ C * Real.exp (A * (A₁ + 1) * (‖s‖ * Real.log (‖s‖ + 2))) :=
+          mul_le_mul_of_nonneg_left h1 hC0
+      _ ≤ C * (Real.exp (A * B₁) + 1) * Real.exp (A * (A₁ + 1) * (‖s‖ * Real.log (‖s‖ + 2))) :=
+          mul_le_mul_of_nonneg_right
+            (le_mul_of_one_le_right hC0 (by nlinarith [Real.exp_pos (A * B₁)]))
+            (Real.exp_pos _).le
+  · rw [← completedRiemannZeta₀_one_sub s]
+    have h1s : (1 / 2 : ℝ) ≤ (1 - s).re := by rw [Complex.sub_re, Complex.one_re]; linarith
+    refine (hb (1 - s) h1s).trans ?_
+    have hms : ‖1 - s‖ ≤ ‖s‖ + 1 := (norm_sub_le 1 s).trans (by rw [norm_one]; linarith)
+    have hkey : A * (‖1 - s‖ * Real.log (‖1 - s‖ + 2))
+        ≤ A * B₁ + A * (A₁ + 1) * (‖s‖ * Real.log (‖s‖ + 2)) := by
+      have := hr ‖1 - s‖ ‖s‖ hnn (norm_nonneg _) hms
+      nlinarith [mul_le_mul_of_nonneg_left this hA0, hA0, hA₁0, mul_nonneg hnn hlogpos]
+    calc C * Real.exp (A * (‖1 - s‖ * Real.log (‖1 - s‖ + 2)))
+        ≤ C * Real.exp (A * B₁ + A * (A₁ + 1) * (‖s‖ * Real.log (‖s‖ + 2))) :=
+          mul_le_mul_of_nonneg_left (Real.exp_le_exp.mpr hkey) hC0
+      _ = C * Real.exp (A * B₁) * Real.exp (A * (A₁ + 1) * (‖s‖ * Real.log (‖s‖ + 2))) := by
+          rw [Real.exp_add]; ring
+      _ ≤ C * (Real.exp (A * B₁) + 1) * Real.exp (A * (A₁ + 1) * (‖s‖ * Real.log (‖s‖ + 2))) := by
+          gcongr
+          · nlinarith [Real.exp_pos (A * B₁)]
+
 end SIDELvConservation

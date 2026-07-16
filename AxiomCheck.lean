@@ -56,3 +56,5 @@ open SIDELvConservation
 #print axioms SIDELvConservation.Gamma_le_exp -- sub-lemma 4: Γ y ≤ exp(2y·log(y+2))
 #print axioms SIDELvConservation.exp_arg_bound -- sub-lemma 5: exp-argument arithmetic glue (staged, no nlinarith)
 #print axioms SIDELvConservation.exists_norm_completedRiemannZeta₀_le_exp_half -- growth bound on re s ≥ 1/2
+#print axioms SIDELvConservation.reflect_arith -- reflection arithmetic
+#print axioms SIDELvConservation.exists_norm_completedRiemannZeta₀_le_exp -- C7-order growth conjunct, all s
