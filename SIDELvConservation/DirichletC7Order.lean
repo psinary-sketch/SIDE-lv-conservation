@@ -277,4 +277,54 @@ theorem exists_norm_completedHurwitzZetaEven₀_le_exp_half (a : UnitAddCircle) 
               mul_le_mul_of_nonneg_left hmain hCd
           _ = Cd * Real.exp B₀ * Real.exp (A₀ * (‖s‖ * Real.log (‖s‖ + 2))) := by ring
 
+/-! ## The reduction to the completed Dirichlet L-function (even case) -/
+
+/-- **Reduction identity (WATCH 2, term-by-term).** For even `Φ : ZMod N → ℂ` with `Φ 0 = 0` and
+`∑ Φ = 0`, `completedLFunction Φ` is the conductor-scaled χ-weighted sum of the *entire* even Hurwitz
+completed zetas — the two pole-correction terms of `completedHurwitzZetaEven_eq` vanish under exactly
+these two conditions (`Φ 0 = 0` kills the `s = 0` term, `∑ Φ = 0` the `s = 1` term). -/
+theorem completedLFunction_eq_sum_even₀ {N : ℕ} [NeZero N] {Φ : ZMod N → ℂ}
+    (hΦe : Φ.Even) (hΦ0 : Φ 0 = 0) (hΦs : ∑ j, Φ j = 0) (s : ℂ) :
+    ZMod.completedLFunction Φ s
+      = (N : ℂ) ^ (-s) * ∑ j, Φ j * completedHurwitzZetaEven₀ (ZMod.toAddCircle j) s := by
+  rw [ZMod.completedLFunction_def_even hΦe]
+  congr 1
+  have h1 : ∑ j : ZMod N, Φ j * ((if ZMod.toAddCircle j = 0 then (1 : ℂ) else 0) / s) = 0 := by
+    have hstep : ∑ j : ZMod N, Φ j * (if ZMod.toAddCircle j = 0 then (1 : ℂ) else 0) = Φ 0 := by
+      have hpt : ∀ j : ZMod N, Φ j * (if ZMod.toAddCircle j = 0 then (1 : ℂ) else 0)
+          = (if j = 0 then Φ j else 0) := by
+        intro j
+        by_cases h : j = 0
+        · subst h; simp [ZMod.toAddCircle_eq_zero]
+        · have hne : ZMod.toAddCircle j ≠ 0 := fun hc => h (ZMod.toAddCircle_eq_zero.mp hc)
+          simp [hne, h]
+      rw [Finset.sum_congr rfl (fun j _ => hpt j), Finset.sum_ite_eq' Finset.univ (0 : ZMod N) Φ]
+      simp
+    calc ∑ j : ZMod N, Φ j * ((if ZMod.toAddCircle j = 0 then (1 : ℂ) else 0) / s)
+        = (∑ j : ZMod N, Φ j * (if ZMod.toAddCircle j = 0 then (1 : ℂ) else 0)) / s := by
+          rw [Finset.sum_div]; exact Finset.sum_congr rfl (fun j _ => by rw [mul_div_assoc])
+      _ = Φ 0 / s := by rw [hstep]
+      _ = 0 := by rw [hΦ0, zero_div]
+  have h2 : ∑ j : ZMod N, Φ j * (1 / (1 - s)) = 0 := by
+    rw [← Finset.sum_mul, hΦs, zero_mul]
+  have expand : ∀ j ∈ Finset.univ, Φ j * completedHurwitzZetaEven (ZMod.toAddCircle j) s
+      = Φ j * completedHurwitzZetaEven₀ (ZMod.toAddCircle j) s
+        - Φ j * ((if ZMod.toAddCircle j = 0 then (1 : ℂ) else 0) / s)
+        - Φ j * (1 / (1 - s)) := by
+    intro j _; rw [completedHurwitzZetaEven_eq]; ring
+  rw [Finset.sum_congr rfl expand, Finset.sum_sub_distrib, Finset.sum_sub_distrib, h1, h2,
+    sub_zero, sub_zero]
+
+/-- **Conductor factor.** `‖(N : ℂ)^(−s)‖ ≤ exp(log N · ‖s‖)` — order-1 type, absorbed into `A`.
+`N ≥ 1` (from `NeZero N`) gives `log N ≥ 0`; `−re s ≤ ‖s‖`. -/
+theorem norm_natCast_cpow_neg_le {N : ℕ} [NeZero N] (s : ℂ) :
+    ‖(N : ℂ) ^ (-s)‖ ≤ Real.exp (Real.log N * ‖s‖) := by
+  have hN : 0 < N := Nat.pos_of_ne_zero (NeZero.ne N)
+  have hN0 : (0 : ℝ) < N := by exact_mod_cast hN
+  rw [Complex.norm_natCast_cpow_of_pos hN, Complex.neg_re, Real.rpow_def_of_pos hN0, Real.exp_le_exp]
+  have hlogN : 0 ≤ Real.log N := Real.log_nonneg (by exact_mod_cast hN)
+  have hre : -s.re ≤ ‖s‖ := by
+    have := Complex.abs_re_le_norm s; rw [abs_le] at this; linarith [this.1]
+  exact mul_le_mul_of_nonneg_left hre hlogN
+
 end SIDELvConservation
