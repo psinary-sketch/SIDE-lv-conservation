@@ -327,4 +327,63 @@ theorem norm_natCast_cpow_neg_le {N : ℕ} [NeZero N] (s : ℂ) :
     have := Complex.abs_re_le_norm s; rw [abs_le] at this; linarith [this.1]
   exact mul_le_mul_of_nonneg_left hre hlogN
 
+/-- **Even-Φ C₇-order bound on `re s ≥ ½`.** Combines the per-`a` half-bounds over the finite `ZMod N`
+(via `choose` + `Finset.sup'`) with the reduction identity and the conductor lemma. Hypotheses:
+`Φ` even, `Φ 0 = 0`, `∑ Φ = 0` (the conditions making the pole corrections vanish). -/
+theorem exists_norm_completedLFunction_even_le_exp_half {N : ℕ} [NeZero N] {Φ : ZMod N → ℂ}
+    (hΦe : Φ.Even) (hΦ0 : Φ 0 = 0) (hΦs : ∑ j, Φ j = 0) :
+    ∃ A C : ℝ, 0 ≤ A ∧ ∀ s : ℂ, 1 / 2 ≤ s.re →
+      ‖ZMod.completedLFunction Φ s‖ ≤ C * Real.exp (A * (‖s‖ * Real.log (‖s‖ + 2))) := by
+  choose A C hA0 hb using fun j : ZMod N =>
+    exists_norm_completedHurwitzZetaEven₀_le_exp_half (ZMod.toAddCircle j)
+  have hC0 : ∀ j, 0 ≤ C j := by
+    intro j
+    have h := hb j 1 (by norm_num)
+    nlinarith [norm_nonneg (completedHurwitzZetaEven₀ (ZMod.toAddCircle j) 1),
+      Real.exp_pos (A j * (‖(1 : ℂ)‖ * Real.log (‖(1 : ℂ)‖ + 2)))]
+  set Amax := Finset.univ.sup' Finset.univ_nonempty A with hAmax
+  have hAmax_ge : ∀ j, A j ≤ Amax := fun j => Finset.le_sup' A (Finset.mem_univ j)
+  have hAmax0 : 0 ≤ Amax := le_trans (hA0 _) (hAmax_ge (0 : ZMod N))
+  set Ctot := ∑ j : ZMod N, ‖Φ j‖ * C j with hCtot
+  have hlog2 : (0 : ℝ) < Real.log 2 := Real.log_pos (by norm_num)
+  have hlogN : 0 ≤ Real.log N :=
+    Real.log_nonneg (by exact_mod_cast Nat.one_le_iff_ne_zero.mpr (NeZero.ne N))
+  refine ⟨Real.log N / Real.log 2 + Amax, Ctot, by positivity, fun s hs => ?_⟩
+  set L := ‖s‖ * Real.log (‖s‖ + 2) with hL
+  have hlogs : 0 ≤ Real.log (‖s‖ + 2) := Real.log_nonneg (by linarith [norm_nonneg s])
+  have hLnn : 0 ≤ L := by rw [hL]; positivity
+  rw [completedLFunction_eq_sum_even₀ hΦe hΦ0 hΦs, norm_mul]
+  have hsum : ‖∑ j : ZMod N, Φ j * completedHurwitzZetaEven₀ (ZMod.toAddCircle j) s‖
+      ≤ Ctot * Real.exp (Amax * L) := by
+    calc ‖∑ j : ZMod N, Φ j * completedHurwitzZetaEven₀ (ZMod.toAddCircle j) s‖
+        ≤ ∑ j : ZMod N, ‖Φ j * completedHurwitzZetaEven₀ (ZMod.toAddCircle j) s‖ :=
+          norm_sum_le _ _
+      _ ≤ ∑ j : ZMod N, ‖Φ j‖ * (C j * Real.exp (Amax * L)) := by
+          refine Finset.sum_le_sum (fun j _ => ?_)
+          rw [norm_mul]
+          refine mul_le_mul_of_nonneg_left ?_ (norm_nonneg _)
+          calc ‖completedHurwitzZetaEven₀ (ZMod.toAddCircle j) s‖
+              ≤ C j * Real.exp (A j * L) := hb j s hs
+            _ ≤ C j * Real.exp (Amax * L) :=
+                mul_le_mul_of_nonneg_left
+                  (Real.exp_le_exp.mpr (mul_le_mul_of_nonneg_right (hAmax_ge j) hLnn)) (hC0 j)
+      _ = Ctot * Real.exp (Amax * L) := by
+          rw [hCtot, Finset.sum_mul]; exact Finset.sum_congr rfl (fun j _ => by ring)
+  have hkey : Real.log N * ‖s‖ + Amax * L ≤ (Real.log N / Real.log 2 + Amax) * L := by
+    have h1 : ‖s‖ * Real.log 2 ≤ L := by
+      rw [hL]
+      exact mul_le_mul_of_nonneg_left
+        (Real.log_le_log (by norm_num) (by linarith [norm_nonneg s])) (norm_nonneg s)
+    have hsL : Real.log N * ‖s‖ ≤ Real.log N / Real.log 2 * L := by
+      calc Real.log N * ‖s‖ = Real.log N / Real.log 2 * (‖s‖ * Real.log 2) := by field_simp
+        _ ≤ Real.log N / Real.log 2 * L := mul_le_mul_of_nonneg_left h1 (by positivity)
+    rw [add_mul]; linarith [hsL]
+  calc ‖(N : ℂ) ^ (-s)‖ * ‖∑ j : ZMod N, Φ j * completedHurwitzZetaEven₀ (ZMod.toAddCircle j) s‖
+      ≤ Real.exp (Real.log N * ‖s‖) * (Ctot * Real.exp (Amax * L)) :=
+        mul_le_mul (norm_natCast_cpow_neg_le s) hsum (norm_nonneg _) (Real.exp_pos _).le
+    _ = Ctot * Real.exp (Real.log N * ‖s‖ + Amax * L) := by rw [Real.exp_add]; ring
+    _ ≤ Ctot * Real.exp ((Real.log N / Real.log 2 + Amax) * L) := by
+        refine mul_le_mul_of_nonneg_left (Real.exp_le_exp.mpr hkey) ?_
+        rw [hCtot]; exact Finset.sum_nonneg (fun j _ => mul_nonneg (norm_nonneg _) (hC0 j))
+
 end SIDELvConservation
