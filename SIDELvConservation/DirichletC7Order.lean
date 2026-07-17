@@ -386,4 +386,93 @@ theorem exists_norm_completedLFunction_even_le_exp_half {N : ℕ} [NeZero N] {Φ
         refine mul_le_mul_of_nonneg_left (Real.exp_le_exp.mpr hkey) ?_
         rw [hCtot]; exact Finset.sum_nonneg (fun j _ => mul_nonneg (norm_nonneg _) (hC0 j))
 
+/-- **Even-Φ C₇-order bound on the whole plane.** Extends the `re s ≥ ½` bound to all of `ℂ` via the
+ZMod functional equation `completedLFunction Φ (1−s) = N^{s−1}·completedLFunction (𝓕 Φ) s`
+(`completedLFunction_one_sub_even`), applied at `1−s`: `completedLFunction Φ s = N^{−s}·completedLFunction
+(𝓕 Φ) (1−s)`. The three 𝓕 facts (`dft_even_iff`, `dft_apply_zero`, `dft_dft`) give the half-bound for
+`𝓕 Φ` verbatim; `reflect_arith` and the conductor fold `‖1−s‖`/`N^{−s}` into the constants. -/
+theorem exists_norm_completedLFunction_even_le_exp {N : ℕ} [NeZero N] {Φ : ZMod N → ℂ}
+    (hΦe : Φ.Even) (hΦ0 : Φ 0 = 0) (hΦs : ∑ j, Φ j = 0) :
+    ∃ A C : ℝ, ∀ s : ℂ,
+      ‖ZMod.completedLFunction Φ s‖ ≤ C * Real.exp (A * (‖s‖ * Real.log (‖s‖ + 2))) := by
+  obtain ⟨A, C, hA0, hbΦ⟩ := exists_norm_completedLFunction_even_le_exp_half hΦe hΦ0 hΦs
+  have hFe : (ZMod.dft Φ).Even := ZMod.dft_even_iff.mpr hΦe
+  have hF0 : ZMod.dft Φ 0 = 0 := by rw [ZMod.dft_apply_zero]; exact hΦs
+  have hFs : ∑ j, ZMod.dft Φ j = 0 := by rw [← ZMod.dft_apply_zero, ZMod.dft_dft]; simp [hΦ0]
+  obtain ⟨A', C', hA'0, hbF⟩ := exists_norm_completedLFunction_even_le_exp_half hFe hF0 hFs
+  obtain ⟨Ar, Br, hAr0, hr⟩ := reflect_arith
+  have hlog2 : (0 : ℝ) < Real.log 2 := Real.log_pos (by norm_num)
+  have hlogN : 0 ≤ Real.log N :=
+    Real.log_nonneg (by exact_mod_cast Nat.one_le_iff_ne_zero.mpr (NeZero.ne N))
+  have hC0 : 0 ≤ C := by
+    have := hbΦ 2 (by norm_num)
+    nlinarith [norm_nonneg (ZMod.completedLFunction Φ 2),
+      Real.exp_pos (A * (‖(2 : ℂ)‖ * Real.log (‖(2 : ℂ)‖ + 2)))]
+  have hC'0 : 0 ≤ C' := by
+    have := hbF 2 (by norm_num)
+    nlinarith [norm_nonneg (ZMod.completedLFunction (ZMod.dft Φ) 2),
+      Real.exp_pos (A' * (‖(2 : ℂ)‖ * Real.log (‖(2 : ℂ)‖ + 2)))]
+  refine ⟨max A (Real.log N / Real.log 2 + A' * (Ar + 1)), C + C' * Real.exp (A' * Br), fun s => ?_⟩
+  set L := ‖s‖ * Real.log (‖s‖ + 2) with hL
+  have hlogs : 0 ≤ Real.log (‖s‖ + 2) := Real.log_nonneg (by linarith [norm_nonneg s])
+  have hLnn : 0 ≤ L := by rw [hL]; positivity
+  set Afin := max A (Real.log N / Real.log 2 + A' * (Ar + 1)) with hAfin
+  have hAfin_ge_A : A ≤ Afin := le_max_left _ _
+  have hAfin_ge_R : Real.log N / Real.log 2 + A' * (Ar + 1) ≤ Afin := le_max_right _ _
+  have hexpnn : 0 ≤ Real.exp (Afin * L) := (Real.exp_pos _).le
+  have hCC : 0 ≤ C' * Real.exp (A' * Br) := mul_nonneg hC'0 (Real.exp_pos _).le
+  rcases le_or_gt (1 / 2 : ℝ) s.re with hs | hs
+  · calc ‖ZMod.completedLFunction Φ s‖ ≤ C * Real.exp (A * L) := hbΦ s hs
+      _ ≤ (C + C' * Real.exp (A' * Br)) * Real.exp (Afin * L) := by
+          have h1 : C * Real.exp (A * L) ≤ C * Real.exp (Afin * L) :=
+            mul_le_mul_of_nonneg_left (Real.exp_le_exp.mpr (mul_le_mul_of_nonneg_right hAfin_ge_A hLnn)) hC0
+          nlinarith [h1, mul_nonneg hCC hexpnn]
+  · have hrefl : ZMod.completedLFunction Φ s
+        = (N : ℂ) ^ (-s) * ZMod.completedLFunction (ZMod.dft Φ) (1 - s) := by
+      have hfe := ZMod.completedLFunction_one_sub_even hΦe (1 - s) (Or.inr hΦs) (Or.inr hΦ0)
+      rw [sub_sub_cancel] at hfe
+      rw [hfe]; congr 2; push_cast; ring
+    have hre1s : (1 / 2 : ℝ) ≤ (1 - s).re := by rw [Complex.sub_re, Complex.one_re]; linarith
+    have hms : ‖1 - s‖ ≤ ‖s‖ + 1 := (norm_sub_le 1 s).trans (by rw [norm_one]; linarith)
+    have hrarith : ‖1 - s‖ * Real.log (‖1 - s‖ + 2) ≤ Ar * L + Br := by
+      have := hr ‖1 - s‖ ‖s‖ (norm_nonneg s) (norm_nonneg _) hms; rw [hL]; linarith [this]
+    have hcond : Real.log N * ‖s‖ ≤ Real.log N / Real.log 2 * L := by
+      have h1 : ‖s‖ * Real.log 2 ≤ L := by
+        rw [hL]; exact mul_le_mul_of_nonneg_left
+          (Real.log_le_log (by norm_num) (by linarith [norm_nonneg s])) (norm_nonneg s)
+      calc Real.log N * ‖s‖ = Real.log N / Real.log 2 * (‖s‖ * Real.log 2) := by field_simp
+        _ ≤ Real.log N / Real.log 2 * L := mul_le_mul_of_nonneg_left h1 (by positivity)
+    rw [hrefl, norm_mul]
+    calc ‖(N : ℂ) ^ (-s)‖ * ‖ZMod.completedLFunction (ZMod.dft Φ) (1 - s)‖
+        ≤ Real.exp (Real.log N * ‖s‖)
+            * (C' * Real.exp (A' * (‖1 - s‖ * Real.log (‖1 - s‖ + 2)))) :=
+          mul_le_mul (norm_natCast_cpow_neg_le s) (hbF (1 - s) hre1s) (norm_nonneg _) (Real.exp_pos _).le
+      _ = C' * Real.exp (Real.log N * ‖s‖ + A' * (‖1 - s‖ * Real.log (‖1 - s‖ + 2))) := by
+          rw [Real.exp_add]; ring
+      _ ≤ C' * Real.exp (A' * Br + Afin * L) := by
+          refine mul_le_mul_of_nonneg_left (Real.exp_le_exp.mpr ?_) hC'0
+          have hfold : A' * (‖1 - s‖ * Real.log (‖1 - s‖ + 2)) ≤ A' * (Ar * L + Br) :=
+            mul_le_mul_of_nonneg_left hrarith hA'0
+          have hR : (Real.log N / Real.log 2 + A' * (Ar + 1)) * L ≤ Afin * L :=
+            mul_le_mul_of_nonneg_right hAfin_ge_R hLnn
+          nlinarith [hcond, hfold, hR, hLnn, hA'0, mul_nonneg hA'0 hLnn]
+      _ = (C' * Real.exp (A' * Br)) * Real.exp (Afin * L) := by rw [Real.exp_add]; ring
+      _ ≤ (C + C' * Real.exp (A' * Br)) * Real.exp (Afin * L) := by
+          nlinarith [mul_nonneg hC0 hexpnn, mul_nonneg hCC hexpnn]
+
+/-- **The even Dirichlet terminal.** For a non-trivial even Dirichlet character `χ`, the completed
+Dirichlet L-function has C₇-order (order ≤ 1, maximal type) growth. Via the definitional bridge
+`DirichletCharacter.completedLFunction = ZMod.completedLFunction`, with `Φ 0 = 0` from `N ≠ 1`
+(derived from `χ ≠ 1`) and `∑ χ = 0` from `sum_eq_zero_of_ne_one`. Scope: `χ ≠ 1`, `χ.Even`. -/
+theorem exists_norm_completedLFunction_even_le_exp_dirichlet {N : ℕ} [NeZero N]
+    (χ : DirichletCharacter ℂ N) (hχ : χ ≠ 1) (hχe : (χ : ZMod N → ℂ).Even) :
+    ∃ A C : ℝ, ∀ s : ℂ,
+      ‖DirichletCharacter.completedLFunction χ s‖
+        ≤ C * Real.exp (A * (‖s‖ * Real.log (‖s‖ + 2))) := by
+  have hN : N ≠ 1 := by rintro rfl; exact hχ (Subsingleton.elim _ _)
+  have hχ0 : (χ : ZMod N → ℂ) 0 = 0 := χ.map_zero' hN
+  have hχs : ∑ j, (χ : ZMod N → ℂ) j = 0 := χ.sum_eq_zero_of_ne_one hχ
+  obtain ⟨A, C, hb⟩ := exists_norm_completedLFunction_even_le_exp hχe hχ0 hχs
+  exact ⟨A, C, fun s => hb s⟩
+
 end SIDELvConservation
