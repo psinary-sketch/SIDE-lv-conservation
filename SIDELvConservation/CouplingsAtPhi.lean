@@ -47,6 +47,8 @@ import SIDELvConservation.T2_SDarkness
 import SIDELvConservation.T3_StepNineBridge
 import SIDELvConservation.C7OrderBounds
 import Mathlib.NumberTheory.Harmonic.EulerMascheroni
+import Mathlib.Analysis.Complex.ExponentialBounds
+import Mathlib.Analysis.Real.Pi.Bounds
 
 open Complex HurwitzZeta Set MeasureTheory
 
@@ -307,6 +309,37 @@ numeric-analysis exercise, not a transport of the premise, and it is left as its
 rather than asserted. -/
 theorem n_one_binding_instance :
     Real.eulerMascheroniConstant + 2 ≥ Real.log (4 * Real.pi) := by
-  sorry -- OPEN: needs γ ≥ 0.53102…; Mathlib's `1/2 < γ` is not sharp enough. See the note above.
+  -- γ > eulerMascheroniSeq 12 = harmonic 12 − log 13, with harmonic 12 = 86021/27720.
+  -- `1/2 < γ` (0.5) is too weak; seq 12 ≈ 0.5383 clears log(4π) − 2 ≈ 0.53102 with margin.
+  have hγ : Real.eulerMascheroniSeq 12 < Real.eulerMascheroniConstant :=
+    Real.eulerMascheroniSeq_lt_eulerMascheroniConstant 12
+  have hseq : Real.eulerMascheroniSeq 12 = (86021 / 27720 : ℝ) - Real.log 13 := by
+    rw [Real.eulerMascheroniSeq]; norm_num
+  -- The numeric core: log(4π) + log 13 = log(52π) ≤ harmonic 12 + 2 = 141461/27720.
+  have hmul : Real.log (4 * Real.pi) + Real.log 13 = Real.log (52 * Real.pi) := by
+    rw [← Real.log_mul (by positivity) (by norm_num)]; congr 1; ring
+  have hle : Real.log (52 * Real.pi) ≤ (141461 / 27720 : ℝ) := by
+    rw [Real.log_le_iff_le_exp (by positivity)]
+    -- 52π ≤ exp(141461/27720) = exp 5 · exp(2861/27720)
+    have hsplit : Real.exp (141461 / 27720 : ℝ)
+        = Real.exp 5 * Real.exp (2861 / 27720 : ℝ) := by
+      rw [← Real.exp_add]; norm_num
+    have he5 : (2.7182818283 : ℝ) ^ 5 ≤ Real.exp 5 := by
+      have h1 : (2.7182818283 : ℝ) ≤ Real.exp 1 := Real.exp_one_gt_d9.le
+      calc (2.7182818283 : ℝ) ^ 5 ≤ Real.exp 1 ^ 5 := by gcongr
+        _ = Real.exp 5 := by rw [← Real.exp_nat_mul]; norm_num
+    have hefrac : (1 : ℝ) + 2861 / 27720 ≤ Real.exp (2861 / 27720 : ℝ) := by
+      have := Real.add_one_le_exp (2861 / 27720 : ℝ); linarith
+    have hprod : (2.7182818283 : ℝ) ^ 5 * (1 + 2861 / 27720)
+        ≤ Real.exp 5 * Real.exp (2861 / 27720 : ℝ) :=
+      mul_le_mul he5 hefrac (by positivity) (by positivity)
+    rw [hsplit]
+    calc (52 : ℝ) * Real.pi ≤ 52 * 3.1416 := by nlinarith [Real.pi_lt_d4]
+      _ ≤ (2.7182818283 : ℝ) ^ 5 * (1 + 2861 / 27720) := by norm_num
+      _ ≤ Real.exp 5 * Real.exp (2861 / 27720 : ℝ) := hprod
+  -- Assemble: log(4π) = log(52π) − log 13 ≤ 86021/27720 − log 13 + 2 < γ + 2.
+  have hbound : Real.log (4 * Real.pi) ≤ (86021 / 27720 : ℝ) - Real.log 13 + 2 := by
+    linarith [hmul, hle]
+  linarith [hγ, hseq, hbound]
 
 end SIDELvConservation
