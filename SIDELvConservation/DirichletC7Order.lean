@@ -475,4 +475,307 @@ theorem exists_norm_completedLFunction_even_le_exp_dirichlet {N : ℕ} [NeZero N
   obtain ⟨A, C, hb⟩ := exists_norm_completedLFunction_even_le_exp hχe hχ0 hχs
   exact ⟨A, C, fun s => hb s⟩
 
+/-! ## The odd side
+
+`hurwitzOddFEPair a` is a `StrongFEPair` (f₀ = g₀ = 0): `f_modif = f`, `Λ = mellin f`,
+`completedHurwitzZetaOdd` is already entire, and for odd Φ the pole corrections vanish for free.
+Two novelties (field-read): the `(s+1)/2` argument (Γ-shift) and the modulus-1 `I` factor in the
+odd functional equation. -/
+
+/-- Odd-kernel domination, general `a` (the `exists_exp_domination` brick with `L = 0`). -/
+theorem exists_norm_oddKernel_le (a : UnitAddCircle) :
+    ∃ p C : ℝ, 0 < p ∧ ∀ t : ℝ, 1 ≤ t → |oddKernel a t| ≤ C * Real.exp (-p * t) := by
+  have h : ∃ p : ℝ, 0 < p ∧ (fun t => oddKernel a t - 0) =O[atTop] (fun t => Real.exp (-p * t)) := by
+    obtain ⟨p, hp, hO⟩ := isBigO_atTop_oddKernel a; exact ⟨p, hp, by simpa using hO⟩
+  simpa using exists_exp_domination h (continuousOn_oddKernel a)
+
+/-- The odd pair's `f`-norm is just `|oddKernel a t|` (StrongFEPair — no `f_modif` fold). -/
+theorem norm_f_oddPair (a : UnitAddCircle) (t : ℝ) :
+    ‖(hurwitzOddFEPair a).f t‖ = |oddKernel a t| := by
+  simp only [hurwitzOddFEPair_f, Function.comp_apply, Complex.norm_real, Real.norm_eq_abs]
+
+/-- Norm-Mellin bound, odd, general `a` (through `StrongFEPair.Λ = mellin f`, argument `(s+1)/2`). -/
+theorem norm_completedHurwitzZetaOdd_le (a : UnitAddCircle) (s : ℂ) :
+    ‖completedHurwitzZetaOdd a s‖
+      ≤ (∫ t in Ioi (0 : ℝ), t ^ (((s + 1) / 2).re - 1) * |oddKernel a t|) / 2 := by
+  rw [completedHurwitzZetaOdd, StrongFEPair.Λ_eq, norm_div, show ‖(2 : ℂ)‖ = 2 by norm_num]
+  gcongr
+  rw [mellin]
+  refine (norm_integral_le_integral_norm _).trans_eq ?_
+  refine setIntegral_congr_fun measurableSet_Ioi (fun t ht => ?_)
+  rw [Set.mem_Ioi] at ht
+  rw [norm_smul, Complex.norm_cpow_eq_rpow_re_of_pos ht, Complex.sub_re, Complex.one_re,
+    norm_f_oddPair]
+
+/-- `Ioi 1` Γ-bound, odd, general `a`. -/
+theorem norm_oddKernel_ioi_one_integral_le (a : UnitAddCircle) {p Cd x : ℝ} (hp : 0 < p) (hCd : 0 ≤ Cd)
+    (hdom : ∀ t : ℝ, 1 ≤ t → |oddKernel a t| ≤ Cd * Real.exp (-(p * t)))
+    (hint : MeasureTheory.IntegrableOn (fun t => t ^ (x - 1) * |oddKernel a t|) (Ioi 1)) :
+    (∫ t in Ioi (1 : ℝ), t ^ (x - 1) * |oddKernel a t|)
+      ≤ Cd * (1 / p) ^ (max x 1) * Real.Gamma (max x 1) := by
+  set y := max x 1 with hy
+  have hy1 : (1 : ℝ) ≤ y := le_max_right _ _
+  have hy0 : 0 < y := lt_of_lt_of_le one_pos hy1
+  have hR0 : MeasureTheory.IntegrableOn (fun t : ℝ => t ^ (y - 1) * Real.exp (-(p * t))) (Ioi 0) :=
+    integrableOn_rpow_mul_exp_Ioi hy0 hp
+  have hRint : MeasureTheory.IntegrableOn
+      (fun t : ℝ => Cd * (t ^ (y - 1) * Real.exp (-(p * t)))) (Ioi 1) :=
+    (hR0.mono_set (Set.Ioi_subset_Ioi zero_le_one)).const_mul Cd
+  calc (∫ t in Ioi (1 : ℝ), t ^ (x - 1) * |oddKernel a t|)
+      ≤ ∫ t in Ioi (1 : ℝ), Cd * (t ^ (y - 1) * Real.exp (-(p * t))) := by
+        refine MeasureTheory.setIntegral_mono_on hint hRint measurableSet_Ioi (fun t ht => ?_)
+        rw [Set.mem_Ioi] at ht
+        have h1 := hdom t ht.le
+        have h2 : t ^ (x - 1) ≤ t ^ (y - 1) :=
+          Real.rpow_le_rpow_of_exponent_le ht.le (by linarith [le_max_left x 1])
+        calc t ^ (x - 1) * |oddKernel a t|
+            ≤ t ^ (y - 1) * (Cd * Real.exp (-(p * t))) :=
+              mul_le_mul h2 h1 (abs_nonneg _) (by positivity)
+          _ = Cd * (t ^ (y - 1) * Real.exp (-(p * t))) := by ring
+    _ = Cd * ∫ t in Ioi (1 : ℝ), t ^ (y - 1) * Real.exp (-(p * t)) :=
+        MeasureTheory.integral_const_mul _ _
+    _ ≤ Cd * ∫ t in Ioi (0 : ℝ), t ^ (y - 1) * Real.exp (-(p * t)) := by
+        refine mul_le_mul_of_nonneg_left ?_ hCd
+        refine MeasureTheory.setIntegral_mono_set hR0 ?_ ?_
+        · filter_upwards [MeasureTheory.self_mem_ae_restrict measurableSet_Ioi] with t ht
+          rw [Set.mem_Ioi] at ht; positivity
+        · exact (HasSubset.Subset.eventuallyLE (Set.Ioi_subset_Ioi zero_le_one))
+    _ = Cd * ((1 / p) ^ y * Real.Gamma y) := by rw [Real.integral_rpow_mul_exp_neg_mul_Ioi hy0 hp]
+    _ = Cd * (1 / p) ^ y * Real.Gamma y := by ring
+
+/-- `Ioo 0 1` fixed majorant, odd, general `a`. -/
+theorem norm_oddKernel_ioo_integral_le (a : UnitAddCircle) {x : ℝ} (hx : (1 : ℝ) / 4 ≤ x)
+    (hint : MeasureTheory.IntegrableOn (fun t => t ^ (x - 1) * |oddKernel a t|) (Ioo 0 1))
+    (hmaj : MeasureTheory.IntegrableOn (fun t => t ^ (-(3 : ℝ) / 4) * |oddKernel a t|) (Ioo 0 1)) :
+    (∫ t in Ioo (0 : ℝ) 1, t ^ (x - 1) * |oddKernel a t|)
+      ≤ ∫ t in Ioo (0 : ℝ) 1, t ^ (-(3 : ℝ) / 4) * |oddKernel a t| := by
+  refine MeasureTheory.setIntegral_mono_on hint hmaj measurableSet_Ioo (fun t ht => ?_)
+  have h : t ^ (x - 1) ≤ t ^ (-(3 : ℝ) / 4) :=
+    Real.rpow_le_rpow_of_exponent_ge ht.1 ht.2.le (by linarith)
+  exact mul_le_mul_of_nonneg_right h (abs_nonneg _)
+
+/-- **Per-`a` odd Hurwitz C₇-order growth on `re s ≥ ½`.** Odd analog of the even half-bound; the
+`(s+1)/2` argument gives `x = (re s + 1)/2` and `‖f‖ = |oddKernel a|` (StrongFEPair). -/
+theorem exists_norm_completedHurwitzZetaOdd_le_exp_half (a : UnitAddCircle) :
+    ∃ A C : ℝ, 0 ≤ A ∧ ∀ s : ℂ, 1 / 2 ≤ s.re →
+      ‖completedHurwitzZetaOdd a s‖ ≤ C * Real.exp (A * (‖s‖ * Real.log (‖s‖ + 2))) := by
+  obtain ⟨p, Cd, hp, hdom0⟩ := exists_norm_oddKernel_le a
+  have hdom : ∀ t : ℝ, 1 ≤ t → |oddKernel a t| ≤ Cd * Real.exp (-(p * t)) := by
+    intro t ht; have := hdom0 t ht; rwa [show -(p * t) = -p * t by ring]
+  obtain ⟨A₀, B₀, hA₀0, hA₀⟩ := exp_arg_bound (show (0 : ℝ) ≤ |Real.log (1 / p)| from abs_nonneg _)
+  have hCd : 0 ≤ Cd := by
+    by_contra hc; push_neg at hc
+    have h := (hdom 1 le_rfl).trans' (abs_nonneg _)
+    linarith [mul_neg_of_neg_of_pos hc (Real.exp_pos (-(p * 1)))]
+  have hintg : ∀ w : ℂ, MeasureTheory.IntegrableOn
+      (fun t : ℝ => t ^ (w.re - 1) * |oddKernel a t|) (Ioi 0) := fun w => by
+    have h : MeasureTheory.IntegrableOn
+        (fun t : ℝ => ‖(t : ℂ) ^ (w - 1) • (hurwitzOddFEPair a).f t‖) (Ioi 0) :=
+      (((hurwitzOddFEPair a).hasMellin w).1).norm
+    refine MeasureTheory.IntegrableOn.congr_fun h (fun t ht => ?_) measurableSet_Ioi
+    rw [Set.mem_Ioi] at ht
+    rw [norm_smul, Complex.norm_cpow_eq_rpow_re_of_pos ht, Complex.sub_re, Complex.one_re,
+      norm_f_oddPair]
+  have hmajint : MeasureTheory.IntegrableOn
+      (fun t => t ^ (-(3 : ℝ) / 4) * |oddKernel a t|) (Ioo 0 1) := by
+    refine MeasureTheory.IntegrableOn.congr_fun ((hintg (1 / 4 : ℂ)).mono_set Set.Ioo_subset_Ioi_self)
+      (fun t _ => ?_) measurableSet_Ioo
+    norm_num
+  set M₀ := ∫ t in Ioo (0 : ℝ) 1, t ^ (-(3 : ℝ) / 4) * |oddKernel a t| with hM₀
+  have hM₀0 : 0 ≤ M₀ :=
+    MeasureTheory.setIntegral_nonneg measurableSet_Ioo (fun t ht => by have := ht.1; positivity)
+  refine ⟨A₀, 2⁻¹ * M₀ + Cd * Real.exp B₀, hA₀0, fun s hs => ?_⟩
+  set x := ((s + 1) / 2).re with hxdef
+  have hxval : x = (s.re + 1) / 2 := by rw [hxdef, Complex.div_ofNat_re, Complex.add_re, Complex.one_re]
+  have hx14 : 1 / 4 ≤ x := by rw [hxval]; linarith
+  set y := max x 1 with hy
+  have hy1 : (1 : ℝ) ≤ y := le_max_right _ _
+  have hy0 : (0 : ℝ) < y := lt_of_lt_of_le one_pos hy1
+  have hxs : x ≤ ‖s‖ / 2 + 1 / 2 := by rw [hxval]; have := Complex.re_le_norm s; linarith
+  have hys : y ≤ ‖s‖ / 2 + 1 := by
+    rw [hy]; rcases le_total x 1 with h | h
+    · rw [max_eq_right h]; linarith [norm_nonneg s]
+    · rw [max_eq_left h]; linarith [hxs]
+  have hsplit : (∫ t in Ioi (0 : ℝ), t ^ (x - 1) * |oddKernel a t|)
+      = (∫ t in Ioo (0 : ℝ) 1, t ^ (x - 1) * |oddKernel a t|)
+        + ∫ t in Ioi (1 : ℝ), t ^ (x - 1) * |oddKernel a t| := by
+    rw [← Set.Ioc_union_Ioi_eq_Ioi (zero_le_one),
+      MeasureTheory.setIntegral_union (Set.Ioc_disjoint_Ioi le_rfl) measurableSet_Ioi
+        ((hintg ((s + 1) / 2)).mono_set Set.Ioc_subset_Ioi_self)
+        ((hintg ((s + 1) / 2)).mono_set (Set.Ioi_subset_Ioi zero_le_one)),
+      MeasureTheory.integral_Ioc_eq_integral_Ioo]
+  have hIoo : (∫ t in Ioo (0 : ℝ) 1, t ^ (x - 1) * |oddKernel a t|) ≤ M₀ :=
+    norm_oddKernel_ioo_integral_le a hx14 ((hintg ((s + 1) / 2)).mono_set Set.Ioo_subset_Ioi_self)
+      hmajint
+  have hIoi : (∫ t in Ioi (1 : ℝ), t ^ (x - 1) * |oddKernel a t|)
+      ≤ Cd * (1 / p) ^ y * Real.Gamma y :=
+    norm_oddKernel_ioi_one_integral_le a hp hCd hdom
+      ((hintg ((s + 1) / 2)).mono_set (Set.Ioi_subset_Ioi zero_le_one))
+  have hgexp : (1 / p) ^ y * Real.Gamma y
+      ≤ Real.exp (|Real.log (1 / p)| * y + 2 * y * Real.log (y + 2)) := by
+    rw [Real.rpow_def_of_pos (by positivity), Real.exp_add]
+    refine mul_le_mul ?_ (Gamma_le_exp hy1) (Real.Gamma_nonneg_of_nonneg hy0.le) (Real.exp_pos _).le
+    rw [Real.exp_le_exp]; exact mul_le_mul_of_nonneg_right (le_abs_self _) hy0.le
+  calc ‖completedHurwitzZetaOdd a s‖
+      ≤ (∫ t in Ioi (0 : ℝ), t ^ (x - 1) * |oddKernel a t|) / 2 :=
+        norm_completedHurwitzZetaOdd_le a s
+    _ ≤ (M₀ + Cd * (1 / p) ^ y * Real.Gamma y) / 2 := by rw [hsplit]; gcongr
+    _ = 2⁻¹ * M₀ + 2⁻¹ * (Cd * ((1 / p) ^ y * Real.Gamma y)) := by ring
+    _ ≤ (2⁻¹ * M₀ + Cd * Real.exp B₀) * Real.exp (A₀ * (‖s‖ * Real.log (‖s‖ + 2))) := by
+        have hexp1 : (1 : ℝ) ≤ Real.exp (A₀ * (‖s‖ * Real.log (‖s‖ + 2))) :=
+          Real.one_le_exp (by
+            have : 0 ≤ Real.log (‖s‖ + 2) := Real.log_nonneg (by linarith [norm_nonneg s]); positivity)
+        have hmain : (1 / p) ^ y * Real.Gamma y
+            ≤ Real.exp B₀ * Real.exp (A₀ * (‖s‖ * Real.log (‖s‖ + 2))) := by
+          refine hgexp.trans ?_
+          rw [← Real.exp_add]
+          exact Real.exp_le_exp.mpr (by have := hA₀ ‖s‖ y (norm_nonneg s) hy1 hys; nlinarith [this])
+        have hXnn : (0 : ℝ) ≤ Cd * ((1 / p) ^ y * Real.Gamma y) :=
+          mul_nonneg hCd (mul_nonneg (Real.rpow_nonneg (by positivity) y)
+            (Real.Gamma_nonneg_of_nonneg hy0.le))
+        rw [add_mul]
+        refine add_le_add (le_mul_of_one_le_right (by positivity) hexp1) ?_
+        calc 2⁻¹ * (Cd * ((1 / p) ^ y * Real.Gamma y))
+            ≤ Cd * ((1 / p) ^ y * Real.Gamma y) := by linarith
+          _ ≤ Cd * (Real.exp B₀ * Real.exp (A₀ * (‖s‖ * Real.log (‖s‖ + 2)))) :=
+              mul_le_mul_of_nonneg_left hmain hCd
+          _ = Cd * Real.exp B₀ * Real.exp (A₀ * (‖s‖ * Real.log (‖s‖ + 2))) := by ring
+
+/-- **Odd-Φ C₇-order bound on `re s ≥ ½`.** Via `completedLFunction_def_odd` (direct sum over the
+entire `completedHurwitzZetaOdd`, no pole cancellation) + finite-max over `ZMod N`. -/
+theorem exists_norm_completedLFunction_odd_le_exp_half {N : ℕ} [NeZero N] {Φ : ZMod N → ℂ}
+    (hΦo : Φ.Odd) :
+    ∃ A C : ℝ, 0 ≤ A ∧ ∀ s : ℂ, 1 / 2 ≤ s.re →
+      ‖ZMod.completedLFunction Φ s‖ ≤ C * Real.exp (A * (‖s‖ * Real.log (‖s‖ + 2))) := by
+  choose A C hA0 hb using fun j : ZMod N =>
+    exists_norm_completedHurwitzZetaOdd_le_exp_half (ZMod.toAddCircle j)
+  have hC0 : ∀ j, 0 ≤ C j := by
+    intro j
+    have h := hb j 1 (by norm_num)
+    nlinarith [norm_nonneg (completedHurwitzZetaOdd (ZMod.toAddCircle j) 1),
+      Real.exp_pos (A j * (‖(1 : ℂ)‖ * Real.log (‖(1 : ℂ)‖ + 2)))]
+  set Amax := Finset.univ.sup' Finset.univ_nonempty A with hAmax
+  have hAmax_ge : ∀ j, A j ≤ Amax := fun j => Finset.le_sup' A (Finset.mem_univ j)
+  have hAmax0 : 0 ≤ Amax := le_trans (hA0 _) (hAmax_ge (0 : ZMod N))
+  set Ctot := ∑ j : ZMod N, ‖Φ j‖ * C j with hCtot
+  have hlog2 : (0 : ℝ) < Real.log 2 := Real.log_pos (by norm_num)
+  have hlogN : 0 ≤ Real.log N :=
+    Real.log_nonneg (by exact_mod_cast Nat.one_le_iff_ne_zero.mpr (NeZero.ne N))
+  refine ⟨Real.log N / Real.log 2 + Amax, Ctot, by positivity, fun s hs => ?_⟩
+  set L := ‖s‖ * Real.log (‖s‖ + 2) with hL
+  have hlogs : 0 ≤ Real.log (‖s‖ + 2) := Real.log_nonneg (by linarith [norm_nonneg s])
+  have hLnn : 0 ≤ L := by rw [hL]; positivity
+  rw [ZMod.completedLFunction_def_odd hΦo, norm_mul]
+  have hsum : ‖∑ j : ZMod N, Φ j * completedHurwitzZetaOdd (ZMod.toAddCircle j) s‖
+      ≤ Ctot * Real.exp (Amax * L) := by
+    calc ‖∑ j : ZMod N, Φ j * completedHurwitzZetaOdd (ZMod.toAddCircle j) s‖
+        ≤ ∑ j : ZMod N, ‖Φ j * completedHurwitzZetaOdd (ZMod.toAddCircle j) s‖ := norm_sum_le _ _
+      _ ≤ ∑ j : ZMod N, ‖Φ j‖ * (C j * Real.exp (Amax * L)) := by
+          refine Finset.sum_le_sum (fun j _ => ?_)
+          rw [norm_mul]
+          refine mul_le_mul_of_nonneg_left ?_ (norm_nonneg _)
+          calc ‖completedHurwitzZetaOdd (ZMod.toAddCircle j) s‖
+              ≤ C j * Real.exp (A j * L) := hb j s hs
+            _ ≤ C j * Real.exp (Amax * L) :=
+                mul_le_mul_of_nonneg_left
+                  (Real.exp_le_exp.mpr (mul_le_mul_of_nonneg_right (hAmax_ge j) hLnn)) (hC0 j)
+      _ = Ctot * Real.exp (Amax * L) := by
+          rw [hCtot, Finset.sum_mul]; exact Finset.sum_congr rfl (fun j _ => by ring)
+  have hkey : Real.log N * ‖s‖ + Amax * L ≤ (Real.log N / Real.log 2 + Amax) * L := by
+    have h1 : ‖s‖ * Real.log 2 ≤ L := by
+      rw [hL]
+      exact mul_le_mul_of_nonneg_left
+        (Real.log_le_log (by norm_num) (by linarith [norm_nonneg s])) (norm_nonneg s)
+    have hsL : Real.log N * ‖s‖ ≤ Real.log N / Real.log 2 * L := by
+      calc Real.log N * ‖s‖ = Real.log N / Real.log 2 * (‖s‖ * Real.log 2) := by field_simp
+        _ ≤ Real.log N / Real.log 2 * L := mul_le_mul_of_nonneg_left h1 (by positivity)
+    rw [add_mul]; linarith [hsL]
+  calc ‖(N : ℂ) ^ (-s)‖ * ‖∑ j : ZMod N, Φ j * completedHurwitzZetaOdd (ZMod.toAddCircle j) s‖
+      ≤ Real.exp (Real.log N * ‖s‖) * (Ctot * Real.exp (Amax * L)) :=
+        mul_le_mul (norm_natCast_cpow_neg_le s) hsum (norm_nonneg _) (Real.exp_pos _).le
+    _ = Ctot * Real.exp (Real.log N * ‖s‖ + Amax * L) := by rw [Real.exp_add]; ring
+    _ ≤ Ctot * Real.exp ((Real.log N / Real.log 2 + Amax) * L) := by
+        refine mul_le_mul_of_nonneg_left (Real.exp_le_exp.mpr hkey) ?_
+        rw [hCtot]; exact Finset.sum_nonneg (fun j _ => mul_nonneg (norm_nonneg _) (hC0 j))
+
+/-- **Odd-Φ C₇-order bound on the whole plane.** Via the odd ZMod FE (extra modulus-1 `I` factor). -/
+theorem exists_norm_completedLFunction_odd_le_exp {N : ℕ} [NeZero N] {Φ : ZMod N → ℂ} (hΦo : Φ.Odd) :
+    ∃ A C : ℝ, ∀ s : ℂ,
+      ‖ZMod.completedLFunction Φ s‖ ≤ C * Real.exp (A * (‖s‖ * Real.log (‖s‖ + 2))) := by
+  obtain ⟨A, C, hA0, hbΦ⟩ := exists_norm_completedLFunction_odd_le_exp_half hΦo
+  obtain ⟨A', C', hA'0, hbF⟩ := exists_norm_completedLFunction_odd_le_exp_half (ZMod.dft_odd_iff.mpr hΦo)
+  obtain ⟨Ar, Br, hAr0, hr⟩ := reflect_arith
+  have hlog2 : (0 : ℝ) < Real.log 2 := Real.log_pos (by norm_num)
+  have hlogN : 0 ≤ Real.log N :=
+    Real.log_nonneg (by exact_mod_cast Nat.one_le_iff_ne_zero.mpr (NeZero.ne N))
+  have hC0 : 0 ≤ C := by
+    have := hbΦ 2 (by norm_num)
+    nlinarith [norm_nonneg (ZMod.completedLFunction Φ 2),
+      Real.exp_pos (A * (‖(2 : ℂ)‖ * Real.log (‖(2 : ℂ)‖ + 2)))]
+  have hC'0 : 0 ≤ C' := by
+    have := hbF 2 (by norm_num)
+    nlinarith [norm_nonneg (ZMod.completedLFunction (ZMod.dft Φ) 2),
+      Real.exp_pos (A' * (‖(2 : ℂ)‖ * Real.log (‖(2 : ℂ)‖ + 2)))]
+  refine ⟨max A (Real.log N / Real.log 2 + A' * (Ar + 1)), C + C' * Real.exp (A' * Br), fun s => ?_⟩
+  set L := ‖s‖ * Real.log (‖s‖ + 2) with hL
+  have hlogs : 0 ≤ Real.log (‖s‖ + 2) := Real.log_nonneg (by linarith [norm_nonneg s])
+  have hLnn : 0 ≤ L := by rw [hL]; positivity
+  set Afin := max A (Real.log N / Real.log 2 + A' * (Ar + 1)) with hAfin
+  have hAfin_ge_A : A ≤ Afin := le_max_left _ _
+  have hAfin_ge_R : Real.log N / Real.log 2 + A' * (Ar + 1) ≤ Afin := le_max_right _ _
+  have hexpnn : 0 ≤ Real.exp (Afin * L) := (Real.exp_pos _).le
+  have hCC : 0 ≤ C' * Real.exp (A' * Br) := mul_nonneg hC'0 (Real.exp_pos _).le
+  rcases le_or_gt (1 / 2 : ℝ) s.re with hs | hs
+  · calc ‖ZMod.completedLFunction Φ s‖ ≤ C * Real.exp (A * L) := hbΦ s hs
+      _ ≤ (C + C' * Real.exp (A' * Br)) * Real.exp (Afin * L) := by
+          have h1 : C * Real.exp (A * L) ≤ C * Real.exp (Afin * L) :=
+            mul_le_mul_of_nonneg_left (Real.exp_le_exp.mpr (mul_le_mul_of_nonneg_right hAfin_ge_A hLnn)) hC0
+          nlinarith [h1, mul_nonneg hCC hexpnn]
+  · have hrefl : ZMod.completedLFunction Φ s
+        = (N : ℂ) ^ (-s) * Complex.I * ZMod.completedLFunction (ZMod.dft Φ) (1 - s) := by
+      have hfe := ZMod.completedLFunction_one_sub_odd hΦo (1 - s)
+      rw [sub_sub_cancel] at hfe
+      rw [hfe]; congr 2; push_cast; ring
+    have hre1s : (1 / 2 : ℝ) ≤ (1 - s).re := by rw [Complex.sub_re, Complex.one_re]; linarith
+    have hms : ‖1 - s‖ ≤ ‖s‖ + 1 := (norm_sub_le 1 s).trans (by rw [norm_one]; linarith)
+    have hrarith : ‖1 - s‖ * Real.log (‖1 - s‖ + 2) ≤ Ar * L + Br := by
+      have := hr ‖1 - s‖ ‖s‖ (norm_nonneg s) (norm_nonneg _) hms; rw [hL]; linarith [this]
+    have hcond : Real.log N * ‖s‖ ≤ Real.log N / Real.log 2 * L := by
+      have h1 : ‖s‖ * Real.log 2 ≤ L := by
+        rw [hL]; exact mul_le_mul_of_nonneg_left
+          (Real.log_le_log (by norm_num) (by linarith [norm_nonneg s])) (norm_nonneg s)
+      calc Real.log N * ‖s‖ = Real.log N / Real.log 2 * (‖s‖ * Real.log 2) := by field_simp
+        _ ≤ Real.log N / Real.log 2 * L := mul_le_mul_of_nonneg_left h1 (by positivity)
+    rw [hrefl, norm_mul, norm_mul, Complex.norm_I, mul_one]
+    calc ‖(N : ℂ) ^ (-s)‖ * ‖ZMod.completedLFunction (ZMod.dft Φ) (1 - s)‖
+        ≤ Real.exp (Real.log N * ‖s‖)
+            * (C' * Real.exp (A' * (‖1 - s‖ * Real.log (‖1 - s‖ + 2)))) :=
+          mul_le_mul (norm_natCast_cpow_neg_le s) (hbF (1 - s) hre1s) (norm_nonneg _) (Real.exp_pos _).le
+      _ = C' * Real.exp (Real.log N * ‖s‖ + A' * (‖1 - s‖ * Real.log (‖1 - s‖ + 2))) := by
+          rw [Real.exp_add]; ring
+      _ ≤ C' * Real.exp (A' * Br + Afin * L) := by
+          refine mul_le_mul_of_nonneg_left (Real.exp_le_exp.mpr ?_) hC'0
+          have hfold : A' * (‖1 - s‖ * Real.log (‖1 - s‖ + 2)) ≤ A' * (Ar * L + Br) :=
+            mul_le_mul_of_nonneg_left hrarith hA'0
+          have hR : (Real.log N / Real.log 2 + A' * (Ar + 1)) * L ≤ Afin * L :=
+            mul_le_mul_of_nonneg_right hAfin_ge_R hLnn
+          nlinarith [hcond, hfold, hR, hLnn, hA'0, mul_nonneg hA'0 hLnn]
+      _ = (C' * Real.exp (A' * Br)) * Real.exp (Afin * L) := by rw [Real.exp_add]; ring
+      _ ≤ (C + C' * Real.exp (A' * Br)) * Real.exp (Afin * L) := by
+          nlinarith [mul_nonneg hC0 hexpnn, mul_nonneg hCC hexpnn]
+
+/-- **The full even-or-odd Dirichlet terminal.** For any non-trivial Dirichlet character, the
+completed Dirichlet L-function has C₇-order (order ≤ 1, maximal type) growth. Parity split via
+`χ.even_or_odd`; the odd branch needs no `χ ≠ 1` (odd ⟹ non-trivial). This is the screened
+statement `exists_norm_completedLFunction_le_exp` (χ ≠ 1). -/
+theorem exists_norm_completedLFunction_le_exp {N : ℕ} [NeZero N]
+    (χ : DirichletCharacter ℂ N) (hχ : χ ≠ 1) :
+    ∃ A C : ℝ, ∀ s : ℂ,
+      ‖DirichletCharacter.completedLFunction χ s‖
+        ≤ C * Real.exp (A * (‖s‖ * Real.log (‖s‖ + 2))) := by
+  rcases χ.even_or_odd with hp | hp
+  · exact exists_norm_completedLFunction_even_le_exp_dirichlet χ hχ hp.to_fun
+  · obtain ⟨A, C, hb⟩ := exists_norm_completedLFunction_odd_le_exp hp.to_fun
+    exact ⟨A, C, fun s => hb s⟩
+
 end SIDELvConservation
