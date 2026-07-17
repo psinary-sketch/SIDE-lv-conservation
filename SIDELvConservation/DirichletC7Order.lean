@@ -82,4 +82,45 @@ theorem exists_norm_cosKernel_sub_le (a : UnitAddCircle) :
       |cosKernel a t - 1| ≤ C * Real.exp (-p * t) :=
   exists_exp_domination (isBigO_atTop_cosKernel_sub a) (continuousOn_cosKernel a)
 
+/-! ## The `f_modif` norm at general `a` (WATCH 1: the non-self-dual fold) -/
+
+/-- **`Ioi 1` piece, general `a`.** `‖f_modif t‖ = |evenKernel a t − L_a|`, `L_a = f₀ = if a=0 then 1
+else 0`. The growth-carrying tail; bounded by `exists_norm_evenKernel_sub_le`. -/
+theorem norm_f_modif_a_of_one_lt (a : UnitAddCircle) {t : ℝ} (ht : 1 < t) :
+    ‖(hurwitzEvenFEPair a).f_modif t‖ = |evenKernel a t - (if a = 0 then 1 else 0)| := by
+  have hnotIoo : t ∉ Set.Ioo (0 : ℝ) 1 := fun h => absurd h.2 (not_lt.mpr ht.le)
+  simp only [WeakFEPair.f_modif, hurwitzEvenFEPair, Function.comp_apply, Pi.add_apply,
+    Set.indicator_of_mem (Set.mem_Ioi.mpr ht), Set.indicator_of_notMem hnotIoo, add_zero]
+  rw [show ((evenKernel a t : ℂ) - (if a = 0 then (1 : ℂ) else 0))
+        = (((evenKernel a t - (if a = 0 then (1 : ℝ) else 0)) : ℝ) : ℂ) by
+      by_cases h : a = 0 <;> simp [h],
+    Complex.norm_real, Real.norm_eq_abs]
+
+/-- **`Ioo 0 1` piece, general `a`.** The non-self-dual fold: `f_modif t = evenKernel a t − t^{−1/2}`
+(since `ε = 1`, `k = 1/2`, `g₀ = 1`), and the functional equation `evenKernel a t = t^{−1/2}·cosKernel
+a (1/t)` gives `‖f_modif t‖ = t^{−1/2}·|cosKernel a (1/t) − 1|`. Bounded by `exists_norm_cosKernel_sub_le`
+at `1/t ≥ 1`. Uses the library FE for general `a`, not the `a = 0` `evenKernel = cosKernel`. -/
+theorem norm_f_modif_a_of_mem_Ioo (a : UnitAddCircle) {t : ℝ} (ht : t ∈ Set.Ioo (0 : ℝ) 1) :
+    ‖(hurwitzEvenFEPair a).f_modif t‖
+      = t ^ (-(1 / 2) : ℝ) * |cosKernel a (1 / t) - 1| := by
+  have ht0 : 0 < t := ht.1
+  have hnotIoi : t ∉ Set.Ioi (1 : ℝ) := fun h => absurd h (not_lt.mpr ht.2.le)
+  have hfe : evenKernel a t = t ^ (-(1 / 2) : ℝ) * cosKernel a (1 / t) := by
+    rw [evenKernel_functional_equation, one_div (t ^ _), ← Real.rpow_neg ht0.le]
+  simp only [WeakFEPair.f_modif, hurwitzEvenFEPair, Function.comp_apply, Pi.add_apply,
+    Set.indicator_of_notMem hnotIoi, Set.indicator_of_mem ht, zero_add, one_mul, smul_eq_mul,
+    mul_one]
+  rw [show ((evenKernel a t : ℝ) : ℂ) - ((t ^ (-(1 / 2) : ℝ) : ℝ) : ℂ)
+      = (((evenKernel a t - t ^ (-(1 / 2) : ℝ)) : ℝ) : ℂ) by push_cast; ring,
+    Complex.norm_real, Real.norm_eq_abs, hfe]
+  rw [show t ^ (-(1 / 2) : ℝ) * cosKernel a (1 / t) - t ^ (-(1 / 2) : ℝ)
+      = t ^ (-(1 / 2) : ℝ) * (cosKernel a (1 / t) - 1) by ring, abs_mul,
+    abs_of_nonneg (Real.rpow_nonneg ht0.le _)]
+
+/-- **Half-Mellin representation, general `a`.** `completedHurwitzZetaEven₀ a s = ½·mellin f_modif (s/2)`
+— definitional (`= (hurwitzEvenFEPair a).Λ₀ (s/2) / 2`, `WeakFEPair.Λ₀ = mellin f_modif`). The
+entire-function representation the growth bound consumes. -/
+theorem completedHurwitzZetaEven₀_eq_half_mellin (a : UnitAddCircle) (s : ℂ) :
+    completedHurwitzZetaEven₀ a s = mellin (hurwitzEvenFEPair a).f_modif (s / 2) / 2 := rfl
+
 end SIDELvConservation
