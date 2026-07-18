@@ -51,6 +51,7 @@ import SIDELvConservation.C7OrderBounds
 import Mathlib.NumberTheory.Harmonic.EulerMascheroni
 import Mathlib.Analysis.Complex.ExponentialBounds
 import Mathlib.Analysis.Real.Pi.Bounds
+import Mathlib.NumberTheory.ModularForms.JacobiTheta.OneVariable
 
 open Complex HurwitzZeta Set MeasureTheory
 
@@ -305,13 +306,35 @@ theorem C7_order_at_Phi : C7_order Phi := by
   have hm := completedRiemannZeta_eq_mellinPhi s hs
   rw [← hm, h]; ring
 
-/-! ## What C₄ and C₅ are, and are not
+/-- **C₄ discharged at Φ** (Fork B, sitting B2, 2026-07-17).  `Φ` is the real-ray restriction of
+`jacobiTheta`, holomorphic on ℍ and covariant under the two PSL₂(ℤ) generators. Clauses discharged by
+Mathlib: (i) `differentiableAt_jacobiTheta`; (ii) the ray bridge `2Φ + 1 = evenKernel 0 = jacobiTheta(I·t)`
+(`evenKernel_def` at `a = 0`, `jacobiTheta_eq_jacobiTheta₂`); (iii) the T-law `jacobiTheta_two_add`;
+(iv) the S-law `jacobiTheta_S_smul` (upper-half-plane, via the `⟨τ, hτ⟩` coercion). Discharges the
+strengthened C₄ (the modular STRUCTURE); the spectral MATHEMATICS is the manuscript leg (Ch. 15 §15.3). -/
+theorem C4_modularity_at_Phi : C4_modularity Phi := by
+  refine ⟨jacobiTheta, fun τ hτ => differentiableAt_jacobiTheta hτ, ?_, jacobiTheta_two_add, ?_⟩
+  · intro t ht
+    have h := evenKernel_def 0 t
+    rw [QuotientAddGroup.mk_zero] at h
+    simp only [ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true, zero_pow, mul_zero, neg_zero,
+      Complex.exp_zero, one_mul, Complex.ofReal_zero, zero_mul] at h
+    rw [Phi, jacobiTheta_eq_jacobiTheta₂, ← h]; ring
+  · intro τ hτ
+    have hS := jacobiTheta_S_smul ⟨τ, hτ⟩
+    rw [UpperHalfPlane.modular_S_smul] at hS
+    simp only [UpperHalfPlane.coe_mk_subtype] at hS
+    have harg : (-1 / τ : ℂ) = (-τ)⁻¹ := by rw [neg_div, one_div, inv_neg]
+    rw [harg]; exact hS
 
-`C4_modularity` and `C5_heat_trace` are STATED ONLY.  No theorem in this file claims them at
-`Phi`, and none should until the statements are argued in the manuscript layer: C₅ in particular
-asserts a *specific* spectral realisation, which the programme explicitly does NOT claim (see the
-Misreadings appendix of EXCLUSION_ENGINE: the spectral kernels disclaim Hilbert–Pólya rather than
-rest on it).  Writing `C5_heat_trace Phi` as a theorem would be an overclaim.
+/-! ## What C₅-output is, and is not (C₄ is now discharged — Fork B, B2)
+
+`C4_modularity` is **discharged** at `Phi` above (`C4_modularity_at_Phi`, Fork B, 2026-07-17); its
+former STATED-ONLY status (the under-strength `C₃`-in-a-wrapper form) is retired.  What remains
+STATED-ONLY is **C₅-OUTPUT** (`C5_output`): the *specific* spectral realisation (Hilbert–Pólya), which
+the programme explicitly does NOT claim (EXCLUSION_ENGINE Misreadings: the spectral kernels disclaim
+Hilbert–Pólya rather than rest on it).  Writing `C5_output Phi` as a theorem would be an overclaim.
+`C5_input` *is* discharged (`C5_input_at_Phi`); the input↔output distance is the premise's fifth register.
 -/
 
 /-! ## The n = 1 binding instance of the channel inequality
@@ -370,5 +393,34 @@ theorem n_one_binding_instance :
   have hbound : Real.log (4 * Real.pi) ≤ (86021 / 27720 : ℝ) - Real.log 13 + 2 := by
     linarith [hmul, hle]
   linarith [hγ, hseq, hbound]
+
+/-- **h1 complete at the fixed witness Φ** (C₄ Fork B close).
+
+All eight coupling facts are discharged at the single fixed witness
+`Φ t = ((evenKernel 0 t : ℂ) − 1) / 2` (from `T1_MellinFactorization`):
+
+  1. `C1_realness`               — realness on the positive real axis;
+  2. `C2_halfplane_nonvanishing` — Mellin-transform nonvanishing on the half-plane;
+  3. `C3_theta_transformation`   — the Jacobi/theta functional-equation symmetry;
+  4. `C4_modularity`             — the **strengthened** PSL₂(ℤ) modularity of the
+                                    ℍ-lift (S-inversion + T-translation laws), Fork B,
+                                    witnessed by `jacobiTheta`;
+  5. `C5_input`                  — the spectral heat-trace INPUT register;
+  6. `C6_holomorphic_extension`  — holomorphy of the completed object;
+  7. `C7_entirety`               — entirety (order-side, whole-plane);
+  8. `C7_order`                  — the order ≤ 1 maximal-type growth bound.
+
+Ledger note.  C₅-**OUTPUT** (the Hilbert–Pólya spectral realization) is DISCLAIMED
+and lies OUTSIDE this count — it is the cited fifth-register premise, not a coupling
+proven here.  This theorem is the `h1` leg of the T3′ bracket; `h2` (nonvanishing of
+the Mellin transform at the operative point) remains the outstanding obligation.
+Each conjunct's own `#print axioms` is `{propext, Classical.choice, Quot.sound}`. -/
+theorem h1_complete_at_Phi :
+    C1_realness Phi ∧ C2_halfplane_nonvanishing Phi ∧ C3_theta_transformation Phi ∧
+      C4_modularity Phi ∧ C5_input Phi ∧ C6_holomorphic_extension Phi ∧
+      C7_entirety Phi ∧ C7_order Phi :=
+  ⟨C1_realness_at_Phi, C2_halfplane_nonvanishing_at_Phi, C3_theta_transformation_at_Phi,
+    C4_modularity_at_Phi, C5_input_at_Phi, C6_holomorphic_extension_at_Phi,
+    C7_entirety_at_Phi, C7_order_at_Phi⟩
 
 end SIDELvConservation
