@@ -16,7 +16,9 @@ STATUS AT THIS COMMIT (honest; see the per-class comments):
   C₂ half-plane Mellin nonvanishing PROVED   (`C2_halfplane_nonvanishing_at_Phi`)
   C₃ theta transformation           PROVED   (`C3_theta_transformation_at_Phi`, via Mathlib's
                                               `evenKernel_functional_equation`)
-  C₄ modularity                     STATED   (no proof claimed)
+  C₄ modularity                     STRENGTHENED (Fork B def, 2026-07-17: holomorphic ℍ-lift +
+                                              S/T generator laws; the v0.5.1 under-strength
+                                              C₃-in-a-wrapper form retired). Discharge = Fork B B2.
   C₅-INPUT  heat trace of a real, non-negative spectrum   PROVED (`C5_input_at_Phi`, μ n = n²,
                                               via Mathlib's `hasSum_int_evenKernel`)
   C₅-OUTPUT the spectral realisation (Hilbert–Pólya)      STATED, DISCLAIMED, NEVER CLAIMED.
@@ -76,11 +78,38 @@ the transformation exists with a real Jacobian factor. -/
 def C3_theta_transformation : Coupling := fun (Φ : ℝ → ℂ) =>
   ∀ t : ℝ, 0 < t → Φ (1 / t) = Real.sqrt t * Φ t + (Real.sqrt t - 1) / 2
 
-/-- **C₄ (modular / PSL₂(ℤ)).**  The integrand is invariant under the modular action in the
-sense that it is a fixed point of the weight-1/2 slash of the generator `t ↦ 1/t` composed
-with translation.  Stated; no proof claimed at this commit. -/
+/-- **C₄ (modular / PSL₂(ℤ)) — STRENGTHENED** (2026-07-17, C₄ Fork B; W-7-style def change).
+`Φ` is the real-ray restriction of a holomorphic function `F` on the upper half-plane that is
+covariant under the two generators of `PSL₂(ℤ) = ⟨S, T | S² = (ST)³ = I⟩`:
+
+  (i)   `F` holomorphic on `ℍ` (`0 < im τ`);
+  (ii)  ray restriction: `F (I·t) = 2·Φ t + 1` for `t > 0`  — via `evenKernel_def`, `2Φ+1 = evenKernel 0`;
+  (iii) **T-law**: `F (2 + τ) = F τ`  — a GENUINELY NEW fact, *not* implied by C₃; C₃ is only the
+        S-law's real-ray shadow, and the modular translation lives in the upper-half-plane variable τ
+        (`jacobiTheta(2+τ) = jacobiTheta τ`), not as the real-`t` identity `Φ(t+2)=Φ(t)`;
+  (iv)  **S-law**, in the library's exact branch form: `F (-1/τ) = (-I·τ)^(1/2) · F τ` on `ℍ`.
+
+Together the four clauses state *"Φ is the ray-restriction of a holomorphic PSL₂(ℤ)-generator-covariant
+function"* — the modular STRUCTURE that Chapter 15 §15.3's per-class argument consumes, at the kernel's
+share of the two-leg split. The spectral MATHEMATICS the manuscript's C₄ rests on (the Eisenstein/Maass
+decomposition of `L²(PSL₂(ℤ)\ℍ)`, both spectra confined to `σ = ½`, Selberg) is the **manuscript leg**,
+cited there, not re-formalized here (that would be Fork C — half-integral-weight modular forms as a
+typeclass, absent from Mathlib at the pin, and not the kernel's share).
+
+**Superseded under-strength form** (through v0.5.1):
+`∀ t>0, (Φ(t+2)=Φ(t)) → Φ(1/t) = √t·Φ t + (√t−1)/2`.
+The C₄ sitting-one screen (2026-07-17) found this was `C3_theta_transformation`'s formula in a
+conditional wrapper: its conclusion was already C₃'s, and its antecedent `Φ(t+2)=Φ(t)` was a spurious
+real-`t` translation (not the modular T-law) and **unused** in any discharge — a one-line discharge of
+it certified nothing about the modular class (E0, turned on our own kernel). **Both facts:** the old
+form was *true at Φ* but *under-strength*; this form carries the modular content. Discharge at `Φ` (with
+`F := jacobiTheta`) is C₄ Fork B, sitting B2. -/
 def C4_modularity : Coupling := fun (Φ : ℝ → ℂ) =>
-  ∀ t : ℝ, 0 < t → Φ (t + 2) = Φ t → Φ (1 / t) = Real.sqrt t * Φ t + (Real.sqrt t - 1) / 2
+  ∃ F : ℂ → ℂ,
+    (∀ τ : ℂ, 0 < τ.im → DifferentiableAt ℂ F τ) ∧
+    (∀ t : ℝ, 0 < t → F (Complex.I * t) = 2 * Φ t + 1) ∧
+    (∀ τ : ℂ, F (2 + τ) = F τ) ∧
+    (∀ τ : ℂ, 0 < τ.im → F (-1 / τ) = (-Complex.I * τ) ^ (1 / 2 : ℂ) * F τ)
 
 /-- **C₅-INPUT (spectral self-adjointness — the certifiable half).**  The integrand is the heat
 trace of a real, non-negative spectrum: there is `μ : ℤ → ℝ` with `μ n ≥ 0` and
