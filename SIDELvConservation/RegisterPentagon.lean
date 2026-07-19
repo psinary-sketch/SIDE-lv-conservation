@@ -1,0 +1,184 @@
+import SIDELvConservation.CouplingsAtPhi
+import Mathlib.NumberTheory.LSeries.RiemannZeta
+import Mathlib.Analysis.SpecialFunctions.Pow.Real
+import Mathlib.Data.Nat.Prime.Basic
+
+/-!
+# The Register Pentagon — the one premise in five registers (§27.3)
+
+**Item (iii), sitting P1 — DEFINITIONS FROZEN, STATEMENT-ONLY.** This module compiles the
+STRUCTURE of the monograph's §27.3 claim — "one premise in five registers … a reader who
+discharges any one of them discharges all five" — as five Prop-level *faces* arranged
+around the one goal state.  It does **not** compile the equivalences between registers
+(that would encode the RH-equivalence — the W-2 trap).  Every face states its register's
+CONTENT; none is a `Bool`/`True` stub or a name that asserts a conclusion.
+
+The goal state (the pentagon's centre) is the T3 bridge target, restated verbatim from
+`SIDELvConservation/PinnedGoal.lean:17-19` and `T3_StepNineBridge.lean:97` at v0.6.0:
+`∃ Φ : ℝ → ℂ, (∀ C ∈ 𝒞, C Φ) ∧ mellin Φ (s / 2) ≠ 0`.  It closes as `⟨Phi, h1, h2⟩`
+(`T3.T3prime_shared_witness`); **h1** (`∀ C ∈ 𝒞, C Phi`) is discharged (`h1_complete_at_Phi`),
+**h2** (`mellin Phi (s/2) ≠ 0`) is the one open obligation.  The five registers are five
+faces of that premise.
+
+## Cross-kernel restatements (federation rule: no Lake deps)
+
+Two faces have their canonical statement OFF-kernel; each is restated **verbatim** here with
+an attribution note and a doc-level correspondence line asserting definitional identity,
+eye-verifiable at both pins.
+- **R2** `Register2_conservationHypothesis` restates `ConservationBridge.ConservationHypothesis`
+  from **SIDE-kernel v1.3 = 0bc21c0** (`Bridge/ConservationBridge.lean:26-29`), with its
+  helper defs `is_xi_zero` (`Kernel/XiDef.lean:34-38`) and `prime_as_real`
+  (`Kernel/Voice1.lean:8`) restated verbatim.  Definitional identity: eye-verifiable.
+- **R1** `Register1_universalityHypothesis` restates the load-bearing hypothesis of
+  `SilenceTheorem.silence_universal` from **SIDE-kernel v1.3 = 0bc21c0**
+  (`Kernel/SilenceTheorem.lean`: `ConfigurationSpace` 26-28, `Interface` 33-37,
+  `Interface.is_universal` 42-44).  Definitional identity: eye-verifiable.
+
+## The edges — STATEMENT-ONLY this sitting (three explicit lists; P2+ discharges DERIVES)
+
+**DERIVES-planned** (compiled implications; discharged in P2 by reusing existing terminals):
+- `GoalState ⇐ h1 ∧ h2` — via `T3.T3prime_shared_witness` (h1 via `h1_complete_at_Phi`).
+- `Register2_conservationHypothesis → RiemannHypothesis` — restated/attributed; the compiled
+  witness is `ConservationBridge.riemann_hypothesis` (SIDE-kernel v1.3).
+- `Register4` channel decomposition `λ_n = λ_A(n) + λ_Z(n)` — via SIDE-li-map `lam_add`
+  (`73cee42`).  **Grade note: COMBINATORIAL stream-level only** (`lam : (ℕ→ℤ)→ℕ→ℤ`); the
+  analytic identification of the stream with the Taylor coefficients of `log ξ` is
+  **manuscript-resident**, not this edge.
+- `Register5_input` certified — via `C5_input_at_Phi`.
+
+**INTERFACES-planned** (each with its named premise as an explicit hypothesis argument, ξ-pattern):
+- `Register4_positivity ↔ RiemannHypothesis` — named premise: **Li's criterion**
+  (Bombieri–Lagarias 1999, via the Guinand–Weil explicit formula; **not in Mathlib**).
+- `Register1_universalityHypothesis → GoalState` — named premise: the universality hypothesis.
+- `Register5_output_HilbertPolya` — named premise: the Hilbert–Pólya realization.
+  **DISCLAIMED**: this programme explicitly disclaims asserting it; it closes over 𝔽_q
+  (Weil 1948, intersection-pairing positivity), is open over ℚ — cited, never claimed.
+
+**NOT-COMPILED** (manuscript-resident — stated here so the absence is documented, not silent):
+- **R3** `Register3_totalityThroughPlaces` — the step-(8) reflection "place-level exclusion
+  reflects to mechanism level"; its native shadow is the T3 pinned `∀∃⟹∃∀` (the open `sorry`
+  at `T3_StepNineBridge.lean:108`).
+- **The cross-register equivalences themselves** ("discharge one → all five").  Compiling
+  them would encode the RH-equivalence (the W-2 trap).  **The pentagon compiles STRUCTURE,
+  never the equivalences.**
+
+## Sorry census
+
+This module adds **no** `sorry`.  All faces are Prop definitions; all edges are documented
+above (statement-only).  The repo census stays exactly two intended sites
+(`T3_StepNineBridge.lean:108`, `PinnedGoal.lean:23`).
+-/
+
+namespace SIDELvConservation
+namespace RegisterPentagon
+
+open Complex
+
+/-! ### The goal state (pentagon centre) — verbatim from PinnedGoal.lean:17-19 / T3:97 -/
+
+/-- The T3 bridge target: a single `Φ` witnessing every coupling in `𝒞` with non-vanishing
+Mellin factor at `s/2`.  Verbatim restatement of `CombinationsExclude`
+(`T3_StepNineBridge.lean:57-58`) and the `PinnedGoal`/`T3:97` goal. -/
+def GoalState (𝒞 : Set T3.Coupling) (s : ℂ) : Prop :=
+  ∃ Φ : ℝ → ℂ, (∀ C ∈ 𝒞, C Φ) ∧ mellin Φ (s / 2) ≠ 0
+
+/-! ### R1 — universality hypothesis (Universal Silence Theorem)
+Restated verbatim from SIDE-kernel v1.3 = 0bc21c0, `Kernel/SilenceTheorem.lean`. -/
+
+/-- `ConfigurationSpace` — verbatim, `SilenceTheorem.lean:26-28` (SIDE-kernel v1.3). -/
+structure ConfigurationSpace where
+  α : Type
+  nonempty : Nonempty α
+
+/-- `Interface` — verbatim, `SilenceTheorem.lean:33-37` (SIDE-kernel v1.3). -/
+structure Interface (C : ConfigurationSpace) (R : Type) where
+  action : C.α → R
+  essential : Prop
+
+/-- `Interface.is_universal` — verbatim, `SilenceTheorem.lean:42-44` (SIDE-kernel v1.3):
+the interface acts identically across all configurations. -/
+def Interface.is_universal {C : ConfigurationSpace} {R : Type} (I : Interface C R) : Prop :=
+  ∀ c₁ c₂ : C.α, I.action c₁ = I.action c₂
+
+/-- **R1 face — the universality hypothesis.**  The load-bearing premise of
+`SilenceTheorem.silence_universal` (SIDE-kernel v1.3): every essential interface is
+universal.  Removing it leaves `silence_universal` with an unsolved goal (Ch. 14). -/
+def Register1_universalityHypothesis : Prop :=
+  ∀ (C : ConfigurationSpace) (R : Type) (I : Interface C R), I.essential → I.is_universal
+
+/-! ### R2 — ConservationHypothesis (Route 3, multiplicative place)
+Restated verbatim from SIDE-kernel v1.3 = 0bc21c0, `Bridge/ConservationBridge.lean`. -/
+
+/-- `prime_as_real` — verbatim, `Kernel/Voice1.lean:8` (SIDE-kernel v1.3). -/
+def prime_as_real (p : Nat) (_ : Nat.Prime p) : Real := (p : Real)
+
+/-- `is_xi_zero` — verbatim, `Kernel/XiDef.lean:34-38` (SIDE-kernel v1.3): a nontrivial zero
+of `riemannZeta` at real part `sigma` (excludes trivial zeros and the pole at 1). -/
+def is_xi_zero (sigma : Real) : Prop :=
+  Exists (fun t : Real =>
+    riemannZeta (⟨sigma, t⟩ : ℂ) = 0 ∧
+    (Not (Exists (fun n : Nat => (⟨sigma, t⟩ : ℂ) = -2 * (↑n + 1)))) ∧
+    (⟨sigma, t⟩ : ℂ) ≠ 1)
+
+/-- **R2 face — `ConservationHypothesis`.**  Verbatim restatement of
+`ConservationBridge.ConservationHypothesis` (SIDE-kernel v1.3 = 0bc21c0,
+`Bridge/ConservationBridge.lean:26-29`, existential form): every ξ-zero forces the Euler
+balance equation at some prime.  Definitional identity eye-verifiable at both pins. -/
+def Register2_conservationHypothesis : Prop :=
+  ∀ (σ : ℝ), is_xi_zero σ →
+  ∃ (p : Nat) (hp : Nat.Prime p),
+  (prime_as_real p hp) ^ (-σ) = (prime_as_real p hp) ^ (-(1 - σ))
+
+/-! ### R3 — totality of realization through places (category-shaped; NOT-COMPILED) -/
+
+/-- **R3 face — totality through places** (step-(8) reflection): per-class exclusion at every
+place reflects to combined exclusion.  Native shadow of the monograph's "if an off-line zero
+existed, some mechanism would produce it, and place-level exclusion reflects to mechanism
+level."  This is exactly the T3 pinned `∀∃ ⟹ ∃∀` (`T3_StepNineBridge.lean:92`, the open
+`sorry` at :108) — manuscript-resident; stated here as the register's face, NOT compiled. -/
+def Register3_totalityThroughPlaces (s : ℂ) : Prop :=
+  (∀ C ∈ sevenClasses, T3.PerClassExcludes C s) → T3.CombinationsExclude sevenClasses s
+
+/-! ### R4 — balance → positivity (analytic; Li's criterion)
+The analytic Li coefficient stream (Taylor coefficients of `log ξ`) is manuscript-resident;
+the face is stated over an abstract stream `lam : ℕ → ℝ`, honoring the two-leg split — the
+combinatorial `lam_add` decomposition lives in SIDE-li-map, the analytic identification is
+the manuscript premise. -/
+
+/-- **R4 face — positivity** (Li's criterion content): the Li coefficients are non-negative.
+Over the actual Taylor coefficients of `log ξ` this is RH-equivalent (Li 1997;
+Bombieri–Lagarias 1999) — that identification is the named manuscript premise on the
+`R4 ↔ RH` interface edge, not part of this face. -/
+def Register4_positivity (lam : ℕ → ℝ) : Prop :=
+  ∀ n : ℕ, 1 ≤ n → 0 ≤ lam n
+
+/-- **R4 face, sharpest form — the channel inequality** `λ_Z(n) ≥ −λ_A(n)` between the two
+independently computable channels (§27.3; BALANCE_AND_POSITIVITY).  The decomposition
+`λ = λ_A + λ_Z` is compiled combinatorially (SIDE-li-map `lam_add`, `73cee42`). -/
+def Register4_channelInequality (lam_A lam_Z : ℕ → ℝ) : Prop :=
+  ∀ n : ℕ, 1 ≤ n → -lam_A n ≤ lam_Z n
+
+/-! ### R5 — spectral-realization distance (input certified / output disclaimed) -/
+
+/-- **R5 input face** — the input-stage spectral coupling: the fixed witness `Φ` is the heat
+trace of a real, non-negative spectrum.  Native and CERTIFIED (`C5_input`, discharged at
+`C5_input_at_Phi`).  Restated as the pentagon's R5-input face by definitional identity. -/
+def Register5_input : T3.Coupling := C5_input
+
+/-- **R5 output face — the Hilbert–Pólya realization.**  Content: the nontrivial ζ-zeros are
+the spectrum of a self-adjoint operator with a positive pairing.  **DISCLAIMED** — this
+programme explicitly disclaims asserting it.  It closes over 𝔽_q (Weil 1948, Castelnuovo /
+intersection-pairing positivity), is open over ℚ.  Stated as an existential over an abstract
+self-adjoint realization; the concrete operator theory is off-kernel, cited, never claimed.
+
+Stated with content (not a `∃ Prop` wrapper): a real spectrum together with a symmetric
+(self-adjoint) pairing with non-negative diagonal (positive pairing), such that every
+nontrivial ζ-zero's real part is realized in the spectrum. -/
+def Register5_output_HilbertPolya : Prop :=
+  ∃ (spectrum : ℕ → ℝ) (pairing : ℕ → ℕ → ℝ),
+    (∀ i j, pairing i j = pairing j i) ∧
+    (∀ i, 0 ≤ pairing i i) ∧
+    (∀ σ : ℝ, is_xi_zero σ → ∃ n : ℕ, spectrum n = σ)
+
+end RegisterPentagon
+end SIDELvConservation
