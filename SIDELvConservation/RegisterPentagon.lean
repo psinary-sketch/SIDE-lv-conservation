@@ -165,20 +165,121 @@ trace of a real, non-negative spectrum.  Native and CERTIFIED (`C5_input`, disch
 `C5_input_at_Phi`).  Restated as the pentagon's R5-input face by definitional identity. -/
 def Register5_input : T3.Coupling := C5_input
 
-/-- **R5 output face — the Hilbert–Pólya realization.**  Content: the nontrivial ζ-zeros are
-the spectrum of a self-adjoint operator with a positive pairing.  **DISCLAIMED** — this
-programme explicitly disclaims asserting it.  It closes over 𝔽_q (Weil 1948, Castelnuovo /
-intersection-pairing positivity), is open over ℚ.  Stated as an existential over an abstract
-self-adjoint realization; the concrete operator theory is off-kernel, cited, never claimed.
+/-- **R5 output face — the compiled SCHEMA of the Hilbert–Pólya realization.**  Content:
+there is an OPERATOR (matrix form `T : ℕ → ℕ → ℝ`), self-adjoint with respect to a
+POSITIVE-DEFINITE symmetric pairing, whose diagonal spectrum realizes every nontrivial
+ζ-zero.  **DISCLAIMED** — this programme explicitly disclaims asserting it; it closes over
+𝔽_q (Weil 1948, Castelnuovo / intersection-pairing positivity), is open over ℚ.
 
-Stated with content (not a `∃ Prop` wrapper): a real spectrum together with a symmetric
-(self-adjoint) pairing with non-negative diagonal (positive pairing), such that every
-nontrivial ζ-zero's real part is realized in the spectrum. -/
+Repaired from the P1 draft (reviewer screen): the earlier `0 ≤ pairing i i` + bare-spectrum
+form was classically trivially true (witness `pairing ≡ 0`, choice-enumerate the countably
+many zeros — no operator content).  Now the pairing is **positive-definite** (`0 < pairing i i`,
+strict) so the zero-pairing witness dies, and an actual **operator** `T` self-adjoint w.r.t.
+the pairing (`pairing i i * T i j = pairing j j * T j i`) with the spectrum on its diagonal is
+required, so a bare spectrum-enumeration no longer witnesses.  This is the SCHEMA of
+Hilbert–Pólya only: the analytic content — genuine self-adjointness on a Hilbert space and
+the trace identification that would make it RH-equivalent — is the C₅ distance,
+manuscript-resident (trail O.18), **DISCLAIMED as ever**.  (A diagonal multiplication operator
+still witnesses the schema; that is expected — the schema is not the theorem.) -/
 def Register5_output_HilbertPolya : Prop :=
-  ∃ (spectrum : ℕ → ℝ) (pairing : ℕ → ℕ → ℝ),
+  ∃ (spectrum : ℕ → ℝ) (pairing : ℕ → ℕ → ℝ) (T : ℕ → ℕ → ℝ),
     (∀ i j, pairing i j = pairing j i) ∧
-    (∀ i, 0 ≤ pairing i i) ∧
+    (∀ i, 0 < pairing i i) ∧
+    (∀ i j, pairing i i * T i j = pairing j j * T j i) ∧
+    (∀ n, T n n = spectrum n) ∧
     (∀ σ : ℝ, is_xi_zero σ → ∃ n : ℕ, spectrum n = σ)
+
+/-! ## The edges — P2 discharges
+
+Three graded lists (concordance-first): DERIVES (native, or cross-kernel-at-pin carried by
+an attributed named premise), INTERFACES (named classical premise, ξ-pattern), and the
+NOT-COMPILED list (documented in the header, never a `sorry`). -/
+
+/-! ### DERIVES edges -/
+
+/-- **DERIVES (native) — goal ⇐ h1 ∧ h2.**  Via `T3.T3prime_shared_witness`: the shared
+witness `Phi` turns `(∀ C ∈ 𝒞, C Phi)` and `mellin Phi (s/2) ≠ 0` into the goal state. -/
+theorem goalState_of_h1_h2 (𝒞 : Set T3.Coupling) (s : ℂ)
+    (h1 : ∀ C ∈ 𝒞, C Phi) (h2 : mellin Phi (s / 2) ≠ 0) :
+    GoalState 𝒞 s :=
+  T3.T3prime_shared_witness 𝒞 s h1 h2
+
+/-- **DERIVES (native) — the seven-class goal reduces to the open h2.**  `h1` is supplied by
+`h1_complete_at_Phi` (projected onto `sevenClasses` membership); only `h2`
+(`mellin Phi (s/2) ≠ 0`) remains open. -/
+theorem goalState_sevenClasses_of_h2 (s : ℂ) (h2 : mellin Phi (s / 2) ≠ 0) :
+    GoalState sevenClasses s := by
+  refine goalState_of_h1_h2 sevenClasses s ?_ h2
+  obtain ⟨hC1, hC2, hC3, hC4, hC5, hC6, _hC7e, hC7o⟩ := h1_complete_at_Phi
+  intro C hC
+  simp only [sevenClasses, Set.mem_insert_iff, Set.mem_singleton_iff] at hC
+  rcases hC with rfl | rfl | rfl | rfl | rfl | rfl | rfl
+  · exact hC1
+  · exact hC2
+  · exact hC3
+  · exact hC4
+  · exact hC5
+  · exact hC6
+  · exact hC7o
+
+/-- **DERIVES (native) — R5-input certified at Φ.**  `Register5_input = C5_input`, discharged
+by `C5_input_at_Phi`. -/
+theorem R5_input_at_Phi : Register5_input Phi :=
+  C5_input_at_Phi
+
+/-- **DERIVES (cross-kernel, at SIDE-kernel v1.3 = 0bc21c0) — R2 → RiemannHypothesis.**
+`Register2_conservationHypothesis` is the verbatim restatement of
+`ConservationBridge.ConservationHypothesis`; the compiled implication to Mathlib's
+`RiemannHypothesis` is `ConservationBridge.riemann_hypothesis` at that pin.  The federation
+rule bars a Lake dep, so the compiled bridge is carried as an explicit, attributed premise
+(definitional identity eye-verifiable at both pins). -/
+theorem R2_conservationHypothesis_to_RH
+    (kernelBridge : Register2_conservationHypothesis → RiemannHypothesis)
+    (h : Register2_conservationHypothesis) : RiemannHypothesis :=
+  kernelBridge h
+
+/-- **DERIVES (cross-kernel, at SIDE-li-map = 73cee42) — R4 channel decomposition
+λ_n = λ_A(n) + λ_Z(n).**  The Li map is additive over the coefficient stream; compiled
+COMBINATORIALLY as `LiLinearMap.lam_add` (stream-level, `η : ℕ → ℤ`).  Carried here as the
+attributed additivity premise, instantiated at the archimedean/zero channel split
+`(lam_A, lam_Z)`.  **Grade note:** combinatorial stream-level only — the analytic
+identification of the stream with the Taylor coefficients of `log ξ` is manuscript-resident
+(the two-leg split). -/
+theorem R4_channelDecomposition
+    {lam : (ℕ → ℤ) → ℕ → ℤ}
+    (lam_additive : ∀ (η η' : ℕ → ℤ) (n : ℕ),
+      lam (fun j => η j + η' j) n = lam η n + lam η' n)
+    (lam_A lam_Z : ℕ → ℤ) (n : ℕ) :
+    lam (fun j => lam_A j + lam_Z j) n = lam lam_A n + lam lam_Z n :=
+  lam_additive lam_A lam_Z n
+
+/-! ### INTERFACES edges (named premise explicit, ξ-pattern — never a sorry) -/
+
+/-- **INTERFACES — R4 positivity → RiemannHypothesis** via **Li's criterion** (named premise:
+Bombieri–Lagarias 1999, `λ_n ≥ 0 ⟺ RH` via the Guinand–Weil explicit formula; **not in
+Mathlib**).  The classical bridge is the explicit hypothesis argument. -/
+theorem R4_positivity_to_RH
+    {lam : ℕ → ℝ}
+    (liCriterion : Register4_positivity lam → RiemannHypothesis)
+    (h : Register4_positivity lam) : RiemannHypothesis :=
+  liCriterion h
+
+/-- **INTERFACES — R1 universality → goal** via the universality bridge (named premise: the
+Universal Silence Theorem instantiated at ξ's interfaces). -/
+theorem R1_universality_to_goal
+    {𝒞 : Set T3.Coupling} {s : ℂ}
+    (universalityBridge : Register1_universalityHypothesis → GoalState 𝒞 s)
+    (h : Register1_universalityHypothesis) : GoalState 𝒞 s :=
+  universalityBridge h
+
+/-- **INTERFACES — R5-output → RiemannHypothesis**, **DISCLAIMED**.  Named premise: the
+Hilbert–Pólya realization bridge.  This programme asserts NEITHER `Register5_output_HilbertPolya`
+NOR this bridge; the edge is stated only so the disclaimed register's shape is on the record.
+Closes over 𝔽_q (Weil 1948), open over ℚ — cited, never claimed. -/
+theorem R5_output_HilbertPolya_to_RH
+    (hpBridge : Register5_output_HilbertPolya → RiemannHypothesis)
+    (h : Register5_output_HilbertPolya) : RiemannHypothesis :=
+  hpBridge h
 
 end RegisterPentagon
 end SIDELvConservation
