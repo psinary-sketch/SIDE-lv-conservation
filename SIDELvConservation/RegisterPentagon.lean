@@ -180,7 +180,12 @@ required, so a bare spectrum-enumeration no longer witnesses.  This is the SCHEM
 Hilbert–Pólya only: the analytic content — genuine self-adjointness on a Hilbert space and
 the trace identification that would make it RH-equivalent — is the C₅ distance,
 manuscript-resident (trail O.18), **DISCLAIMED as ever**.  (A diagonal multiplication operator
-still witnesses the schema; that is expected — the schema is not the theorem.) -/
+still witnesses the schema; that is expected — the schema is not the theorem.)
+
+**C₅-distance marker (W-6-EXT, 2026-07-19):** the certified R5-*input* spectrum `{n²}` provably
+does NOT satisfy this face's realization clause — see `certifiedInput_not_zeroRealizing` below,
+the compiled fifth-register boundary marker (real-part form; the deeper ordinate form is residue
+C5-DIST-A). -/
 def Register5_output_HilbertPolya : Prop :=
   ∃ (spectrum : ℕ → ℝ) (pairing : ℕ → ℕ → ℝ) (T : ℕ → ℕ → ℝ),
     (∀ i j, pairing i j = pairing j i) ∧
@@ -280,6 +285,77 @@ theorem R5_output_HilbertPolya_to_RH
     (hpBridge : Register5_output_HilbertPolya → RiemannHypothesis)
     (h : Register5_output_HilbertPolya) : RiemannHypothesis :=
   hpBridge h
+
+/-! ### The C₅-distance compiled marker (W-6-EXT h2 candidate #4, 2026-07-19)
+
+The fifth register's boundary, made compiled: the CERTIFIED R5-input spectrum `{n²}` provably
+CANNOT witness the (disclaimed) R5-output realization face. -/
+
+/-- The certified R5-input spectrum `μ n = n²` (`CouplingsAtPhi.C5_input`, discharged at
+`C5_input_at_Phi` via Mathlib's `hasSum_int_evenKernel`), presented as the ℕ-indexed real
+spectrum the R5-output realization clause ranges over. -/
+def certifiedInputSpectrum : ℕ → ℝ := fun n => (n : ℝ) ^ 2
+
+/-- The R5-output realization clause, extracted **verbatim** from the last conjunct of
+`Register5_output_HilbertPolya` (`:190`, spectrum abstracted): a spectrum is *zero-realizing*
+iff every nontrivial-ζ-zero real part occurs as a spectrum value.  Definitional identity with
+the compiled face — eye-verifiable against `:190`. -/
+def RealizesXiZeros (spectrum : ℕ → ℝ) : Prop :=
+  ∀ σ : ℝ, is_xi_zero σ → ∃ n : ℕ, spectrum n = σ
+
+/-- **Named classical premise** — a nontrivial ζ-zero exists with real part strictly inside
+the critical strip.  Classical status: Riemann's own computed zeros; Hardy (1914) proved
+infinitely many lie ON the line; the strip bound `0 < Re < 1` is the classical zero-free-region
+consequence.  **Absent from Mathlib at pin `5e932f97`** (the pin carries `RiemannHypothesis`,
+the trivial zeros `riemannZeta_neg_two_mul_nat_add_one`, and `riemannZeta 0 = -1/2`, but no
+nontrivial-zero existence).  Hence carried as an explicit premise (ξ-pattern). -/
+def NontrivialZeroExistsInStrip : Prop :=
+  ∃ σ : ℝ, is_xi_zero σ ∧ 0 < σ ∧ σ < 1
+
+/-- **h2 candidate #4 — THE C₅-DISTANCE COMPILED NEGATIVE (INTERFACES).**
+
+The certified R5-input spectrum `{n²}` is **not** a zero-realizing spectrum: it fails the
+realization clause of `Register5_output_HilbertPolya`, so no witness of that (disclaimed)
+output face can have `spectrum = certifiedInputSpectrum`.
+
+**(a) What it locates.**  The certified R5-*input* spectrum and any spectrum satisfying the
+R5-*output* realization clause are provably distinct objects — the fifth register's boundary
+marker, the C₅ distance made compiled.  Kin to `C7FiniteTypeFalse.C7_finite_type_false` and
+the T7 metric-realization boundary: a negative that names a distance precisely without
+shortening it.
+
+**(b) Two-clause disclosure.**  This is the REAL-PART form (`spectrum n = σ`, the pentagon's
+`:190` clause).  The deeper distance is the ORDINATE form — `CouplingsAtPhi.C5_output`'s clause
+`ρ.im² = μ n`, i.e. `{n²}` vs the squared-ordinate spectrum `{γ²}` — which is UNREACHABLE at
+this pin (it needs either a certified zero value or the zero-counting `N(T)`, both absent from
+Mathlib `5e932f97`).  Filed as dated residue **C5-DIST-A** (OPEN_TRAILS); reopens when Mathlib
+gains either ingredient, or by author ruling.
+
+**(c) What it does NOT claim.**  Nothing about whether some *other* spectrum or operator
+realizes the zeros.  Hilbert–Pólya stays **disclaimed** (`Register5_output_HilbertPolya`).
+The negative is about *this specific certified spectrum only*.
+
+**(d) On the elementary arithmetic.**  The proof is elementary (real parts lie in `(0,1)`; no
+perfect square lies there) precisely BECAUSE the compiled face localizes the distance that
+sharply — the depth is not lost, it is relocated into the named residue C5-DIST-A and the
+disclaimed premise `NontrivialZeroExistsInStrip`. -/
+theorem certifiedInput_not_zeroRealizing
+    (nontrivialZeroInStrip : NontrivialZeroExistsInStrip) :
+    ¬ RealizesXiZeros certifiedInputSpectrum := by
+  intro hReal
+  obtain ⟨σ, hz, h0, h1⟩ := nontrivialZeroInStrip
+  obtain ⟨n, hn⟩ := hReal σ hz
+  have hval : (n : ℝ) ^ 2 = σ := by simpa [certifiedInputSpectrum] using hn
+  have hn0 : n ≠ 0 := by
+    rintro rfl
+    have hσ0 : σ = 0 := by simpa using hval.symm
+    linarith
+  have h1n : (1 : ℝ) ≤ (n : ℝ) := by
+    have : 1 ≤ n := Nat.one_le_iff_ne_zero.mpr hn0
+    exact_mod_cast this
+  have hge1 : (1 : ℝ) ≤ (n : ℝ) ^ 2 := by nlinarith [h1n]
+  rw [hval] at hge1
+  linarith
 
 end RegisterPentagon
 end SIDELvConservation
