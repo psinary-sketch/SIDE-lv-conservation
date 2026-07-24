@@ -1,4 +1,5 @@
 import SIDELvConservation.RegisterPentagon
+import SIDELvConservation.ZeroCarrier
 import Mathlib.Topology.Algebra.InfiniteSum.Basic
 
 /-!
@@ -88,6 +89,40 @@ def ExplicitFormulaDecomp (lam : ℕ → ℝ) (low : Finset NontrivialZero) (tai
     (T : ℝ) : Prop :=
   (∀ z : NontrivialZero, z ∈ low ↔ |z.1.im| ≤ T) ∧
   (∀ n : ℕ, 1 ≤ n → lam n = (∑ z ∈ low, blTerm z n) + tail n)
+
+/-! ### The finite-set conjunct — DISCHARGED (W-ORD-P1-FINSET).
+
+The first conjunct of `ExplicitFormulaDecomp` need no longer be assumed with an opaque `low`: the
+finite set of `|Im| ≤ T` nontrivial zeros is **constructed** (`lowFinset`) and its membership
+characterization is **proved** (`lowFinset_mem_iff`, exactly that first conjunct at
+`low := lowFinset T`).  Chain: `ZeroCarrier.finite_strip_box_riemannZeta_zeros` (entire ξ-carrier
+`s(s−1)Λ₀+1` ⟹ isolated zeros ⟹ finite in the compact strip box) transferred to the
+`NontrivialZero` subtype along the injective coercion.  This replaces one assumed clause with a
+theorem; the decomposition conjunct, `TailBoundPremise`, and `VerifiedZerosTo` stay assumed, and
+RH is untouched.  The deposited `ExplicitFormulaDecomp` / `partialPositivity_finiteRange`
+signatures are unchanged — a caller now *supplies* the conjunct instead of assuming it. -/
+
+/-- Finitely many nontrivial ζ-zeros have `|Im| ≤ T` — the subtype transfer of
+`finite_strip_box_riemannZeta_zeros` along the injective coercion `NontrivialZero → ℂ`. -/
+lemma finite_setOf_abs_im_le (T : ℝ) : {z : NontrivialZero | |z.1.im| ≤ T}.Finite := by
+  refine (Set.Finite.preimage (Subtype.val_injective.injOn)
+    (finite_strip_box_riemannZeta_zeros T)).subset ?_
+  intro z hz
+  exact ⟨z.2.2.1, z.2.2.2, hz, z.2.1⟩
+
+/-- **`lowFinset T`** — the genuine finite `Finset` of nontrivial ζ-zeros with `|Im| ≤ T`. -/
+noncomputable def lowFinset (T : ℝ) : Finset NontrivialZero :=
+  (finite_setOf_abs_im_le T).toFinset
+
+/-- Membership characterization for the constructed `lowFinset`. -/
+lemma mem_lowFinset {T : ℝ} (z : NontrivialZero) : z ∈ lowFinset T ↔ |z.1.im| ≤ T := by
+  simp only [lowFinset, Set.Finite.mem_toFinset, Set.mem_setOf_eq]
+
+/-- **The finite-set conjunct of `ExplicitFormulaDecomp`, PROVED** at `low := lowFinset T`:
+`lowFinset T` is exactly the set of `|Im| ≤ T` nontrivial zeros. -/
+lemma lowFinset_mem_iff (T : ℝ) :
+    ∀ z : NontrivialZero, z ∈ lowFinset T ↔ |z.1.im| ≤ T :=
+  fun z => mem_lowFinset z
 
 /-- **`TailBoundPremise low tail T` — classical detection-threshold named premise** (Voros;
 **NOT in Mathlib**).  For `n ≤ N₀(T)`, the tail is bounded below by the negative of the finite
