@@ -83,5 +83,60 @@ theorem distinctFromInput_discharged
     ¬ RealizesXiZeros certifiedInputSpectrum :=
   certifiedInput_not_zeroRealizing nontrivialZeroInStrip
 
+/-! ## The DH-exclusion lemma — clause (3) made demonstrably load-bearing
+
+Pre-merge gate (2026-07-25). The salt-check flagged `eulerConsuming` as a genuine but *typing-only*
+clause. This section discharges that: a **sign-neutral** ledger — the Davenport–Heilbronn coefficient
+signature (period-sum zero, sign-changing, no Euler product hence no `Λ ≥ 0`) — provably cannot
+satisfy `eulerConsuming`, so no `ZeroActingPairing` admits one. Clause (3) is the compiled Epstein
+discriminator at interface level. C₄ precedent: *strengthen-then-discharge*. -/
+
+open scoped BigOperators
+
+/-- A ledger is **sign-neutral** with period `p`: its values over `Finset.range p` sum to zero and it
+is not identically zero there. This is the Davenport–Heilbronn coefficient signature — a periodic
+arithmetic ledger with period-sum zero that genuinely changes sign. -/
+def SignNeutralLedger (ledger : ℕ → ℝ) (p : ℕ) : Prop :=
+  (∑ m ∈ Finset.range p, ledger m = 0) ∧ (∃ m ∈ Finset.range p, ledger m ≠ 0)
+
+/-- **A sign-neutral ledger cannot be Euler-consuming** — the T-1/Epstein discriminator at interface
+level. A non-negative family summing to zero is identically zero; a nonzero value forbids it. -/
+theorem signNeutral_not_eulerConsuming {ledger : ℕ → ℝ} {p : ℕ}
+    (h : SignNeutralLedger ledger p) : ¬ (∀ m, 0 ≤ ledger m) := by
+  rintro hnn
+  obtain ⟨hsum, m, hm, hne⟩ := h
+  exact hne ((Finset.sum_eq_zero_iff_of_nonneg (fun k _ => hnn k)).1 hsum m hm)
+
+/-- **Clause (3) is load-bearing: no `ZeroActingPairing` has a sign-neutral ledger.** The Davenport–
+Heilbronn ledger dies on `eulerConsuming` — the Epstein test compiled at interface level. The clause
+the salt-check flagged as typing-only now demonstrably excludes the DH witness class. -/
+theorem zeroActingPairing_ledger_not_signNeutral
+    {lam_A lam_Z ledger : ℕ → ℝ} {p : ℕ}
+    (P : ZeroActingPairing lam_A lam_Z ledger) : ¬ SignNeutralLedger ledger p :=
+  fun h => signNeutral_not_eulerConsuming h P.eulerConsuming
+
+/-- The Davenport–Heilbronn coefficient ledger model on its first period (period 5, sum zero,
+sign-changing): `(0,1,2,3,4) ↦ (0,1,1,−1,−1)`. Captures the load-bearing feature — period-sum zero
+and genuinely negative (no `Λ ≥ 0`) — the exact κ aside. -/
+def dhModelLedger : ℕ → ℝ
+  | 1 => 1
+  | 2 => 1
+  | 3 => -1
+  | 4 => -1
+  | _ => 0
+
+/-- **The DH model ledger is sign-neutral** — witnessed, so the exclusion is non-vacuous. -/
+theorem dhModelLedger_signNeutral : SignNeutralLedger dhModelLedger 5 := by
+  refine ⟨?_, 1, ?_, ?_⟩
+  · simp only [Finset.sum_range_succ, Finset.sum_range_zero, dhModelLedger]; norm_num
+  · decide
+  · norm_num [dhModelLedger]
+
+/-- **So the DH model ledger admits no `ZeroActingPairing`** — the Epstein test at interface level:
+the sign-neutral DH ledger dies on `eulerConsuming`, exactly as the salt-check predicted. -/
+theorem dhModelLedger_no_pairing {lam_A lam_Z : ℕ → ℝ}
+    (P : ZeroActingPairing lam_A lam_Z dhModelLedger) : False :=
+  zeroActingPairing_ledger_not_signNeutral P dhModelLedger_signNeutral
+
 end RegisterPentagon
 end SIDELvConservation
