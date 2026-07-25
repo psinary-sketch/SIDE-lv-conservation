@@ -138,5 +138,84 @@ theorem dhModelLedger_no_pairing {lam_A lam_Z : ℕ → ℝ}
     (P : ZeroActingPairing lam_A lam_Z dhModelLedger) : False :=
   zeroActingPairing_ledger_not_signNeutral P dhModelLedger_signNeutral
 
+/-! ## A1 — the 𝔽_q witness anatomy: the four clauses over the function field, and the ℚ-obstruction
+
+Over a smooth projective curve `C / 𝔽_q` the `ZeroActingPairing` type is **inhabited** — this is Weil
+1948 (the Riemann Hypothesis for curves), the one place a genuine witness is known. This section
+records, clause by clause, *what supplies each requirement over 𝔽_q* and *whether it transfers to ℚ*.
+It grounds against the corpus's own C₅ split (BALANCE_AND_POSITIVITY §D.2 / the FIFTH REGISTER: over
+𝔽_q the two coincide, Weil supplying the output from Hodge-index / Castelnuovo positivity on `C × C`;
+over ℚ they do not). Docstring-level anatomy; the compiled `def`s below *record* the per-clause status
+and the theorem reads it back — no verdict is proved here, and the obstruction clauses stay open.
+
+**What supplies each clause over 𝔽_q (on `C` / `C × C`):**
+* `zeroActing`       — Frobenius acting on `H¹(C)`; its eigenvalues `α_i` (`|α_i| = √q`) *are* the
+  zeros of the curve's zeta function. The self-adjoint operator with the zeros as spectrum is a real
+  geometric object here.
+* `yieldsInequality` — the **intersection-form positivity** on `C × C` (Hodge index theorem /
+  Castelnuovo–Severi): positivity on the primitive part yields the Weil explicit-formula positivity,
+  i.e. the FE-even positivity that gives the two-channel inequality.
+* `eulerConsuming`   — the effective-divisor / point counts `N_r = #C(𝔽_{q^r}) ≥ 0` (the curve's Euler
+  product over closed points): the ledger is a non-negative count.
+* `distinctFromInput`— the Frobenius spectrum is the *output* (eigenvalues), genuinely distinct from
+  any `{n²}`-style diagonal input.
+
+**The ℚ-transfer obstruction, named per clause:**
+* `zeroActing`      — **OBSTRUCTS.** `Spec ℤ` is not a curve over a field: there is no Frobenius, no
+  `H¹`, no geometric self-adjoint operator with the ξ-zeros as spectrum. This clause *is* Hilbert–
+  Pólya, open over ℚ.
+* `yieldsInequality`— **OBSTRUCTS.** There is no Hodge index theorem for `Spec ℤ` (no positive
+  arithmetic intersection form). This clause *is* Weil positivity over ℚ, which *is* RH.
+* `eulerConsuming`  — **TRANSFERS.** `ζ` has an Euler product with `Λ(n) ≥ 0` (von Mangoldt); a
+  sign-neutral ledger is excluded (`zeroActingPairing_ledger_not_signNeutral`, this module). Clean.
+* `distinctFromInput`— **TRANSFERS.** The certified `{n²}` input does not realize the ξ-zeros
+  (`distinctFromInput_discharged`, this module). Clean.
+
+**Reading:** the 𝔽_q → ℚ obstruction is *exactly* the two geometric clauses (1) and (2) — the
+Hilbert–Pólya operator and the Weil-positivity pairing — the same two the E-characterization and the
+pairing census name. The two arithmetic clauses (3) and (4) transfer, backed by facts this module
+already carries. -/
+
+/-- The four requirements of `ZeroActingPairing`, enumerated for the transfer anatomy. -/
+inductive PairingClause where
+  | zeroActing
+  | yieldsInequality
+  | eulerConsuming
+  | distinctFromInput
+deriving DecidableEq, Repr
+
+/-- What supplies each clause over `C / 𝔽_q` (Weil 1948). Documentation datum. -/
+def fqSupplier : PairingClause → String
+  | .zeroActing        => "Frobenius on H¹(C); eigenvalues |α|=√q are the zeta zeros"
+  | .yieldsInequality  => "intersection-form positivity on C×C (Hodge index / Castelnuovo–Severi)"
+  | .eulerConsuming    => "effective-divisor counts N_r = #C(𝔽_{q^r}) ≥ 0 (the curve's Euler product)"
+  | .distinctFromInput => "Frobenius spectrum is the output, distinct from any {n²} input"
+
+/-- **Whether each clause transfers from 𝔽_q to ℚ.** Recorded anatomy: the two geometric clauses
+obstruct (they *are* the open Hilbert–Pólya / Weil-positivity content over ℚ); the two arithmetic
+clauses transfer, backed by facts this module carries. NOT a proof of any verdict — the obstruction
+clauses honestly record `false` (open). -/
+def transfersToRationals : PairingClause → Bool
+  | .zeroActing        => false  -- Hilbert–Pólya: no Frobenius / H¹ over Spec ℤ
+  | .yieldsInequality  => false  -- Weil positivity = RH: no Hodge index for Spec ℤ
+  | .eulerConsuming    => true   -- ζ's Λ(n) ≥ 0; sign-neutral ledger excluded (this module)
+  | .distinctFromInput => true   -- certifiedInput_not_zeroRealizing (this module)
+
+/-- **The transfer obstruction is exactly the two geometric clauses** — the named per-clause list,
+compiled: `zeroActing` and `yieldsInequality` do not transfer; `eulerConsuming` and
+`distinctFromInput` do. -/
+theorem transfer_obstruction_is_the_two_geometric_clauses :
+    transfersToRationals PairingClause.zeroActing = false
+    ∧ transfersToRationals PairingClause.yieldsInequality = false
+    ∧ transfersToRationals PairingClause.eulerConsuming = true
+    ∧ transfersToRationals PairingClause.distinctFromInput = true := by decide
+
+/-- **Exactly two clauses obstruct** — the count the anatomy turns on: the transfer failure is
+concentrated in the geometric pair, not spread across all four. -/
+theorem exactly_two_clauses_obstruct :
+    (List.filter (fun c => ! transfersToRationals c)
+      [PairingClause.zeroActing, PairingClause.yieldsInequality,
+       PairingClause.eulerConsuming, PairingClause.distinctFromInput]).length = 2 := by decide
+
 end RegisterPentagon
 end SIDELvConservation
