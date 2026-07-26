@@ -217,5 +217,39 @@ theorem exactly_two_clauses_obstruct :
       [PairingClause.zeroActing, PairingClause.yieldsInequality,
        PairingClause.eulerConsuming, PairingClause.distinctFromInput]).length = 2 := by decide
 
+/-! ## W-SIGN-5 B2 (C-3) — positivity is FREE; the schema's obstruction is zero-realization alone
+
+The pairing-construction attempt's compiled yield. The R5-output schema
+`Register5_output_HilbertPolya` bundles five conjuncts: a symmetric pairing, positive-definiteness,
+self-adjointness of an operator, the spectrum on its diagonal, and *zero-realization*. This lemma
+shows the certified input spectrum `{n²}` witnesses the **first four** — the whole positivity /
+self-adjoint / operator structure — with the identity pairing and the `{n²}` diagonal operator, and
+fails **only** the fifth (`certifiedInput_not_zeroRealizing`). So the positivity structure is *free*;
+the schema's irreducible content is zero-realization alone (pure Hilbert–Pólya). This asserts **no**
+positivity on the ζ-zeros (that is RH); it is a *decoupling* — the opposite of an encode. The
+disclaimer stands unchanged: positivity is not proven on the zeros, it is shown cheap on the wrong
+spectrum. -/
+theorem positivity_free_obstruction_is_zeroRealization
+    (nontrivialZeroInStrip : NontrivialZeroExistsInStrip) :
+    (∃ pairing T : ℕ → ℕ → ℝ,
+        (∀ i j, pairing i j = pairing j i)
+      ∧ (∀ i, 0 < pairing i i)
+      ∧ (∀ i j, pairing i i * T i j = pairing j j * T j i)
+      ∧ (∀ n, T n n = certifiedInputSpectrum n))
+    ∧ ¬ RealizesXiZeros certifiedInputSpectrum := by
+  refine ⟨⟨fun i j => if i = j then (1 : ℝ) else 0,
+           fun i j => if i = j then certifiedInputSpectrum i else 0, ?_, ?_, ?_, ?_⟩,
+          certifiedInput_not_zeroRealizing nontrivialZeroInStrip⟩
+  · intro i j
+    rcases eq_or_ne i j with h | h
+    · subst h; rfl
+    · simp [h, Ne.symm h]
+  · intro i; simp
+  · intro i j
+    rcases eq_or_ne i j with h | h
+    · subst h; rfl
+    · simp [h, Ne.symm h]
+  · intro n; simp
+
 end RegisterPentagon
 end SIDELvConservation
