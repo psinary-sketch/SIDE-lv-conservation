@@ -79,6 +79,21 @@ theorem certifiedPartialInhabitant
 further — the Voros detection threshold, verbatim from the deposited certificate. -/
 theorem coverage_boundary_exact (T : ℝ) : N₀ T = ⌊2 * T ^ 2⌋₊ := rfl
 
+/-- **Barrier-anchor (Program Four (i)(b)): the detection threshold is quadratic — exponent exactly 2.**
+`N₀(T)` sits in `(2·T² − 1, 2·T²]`: the exponent of `T` in the threshold is 2, pinned in the compiled
+certificate — not 1, not tunable. This is the compilable core of the threshold-rigidity barrier (the
+`2` is the `γ²` of `|ρ|²`, functional-equation-forced; a mollifier acting on the ζ-integral side does
+not touch this kernel exponent). It explains why the finite-range certificate cannot be extended by
+mollification — a barrier, not a crossing. -/
+theorem detection_threshold_quadratic (T : ℝ) :
+    2 * T ^ 2 - 1 < (N₀ T : ℝ) ∧ (N₀ T : ℝ) ≤ 2 * T ^ 2 := by
+  have hx : (0 : ℝ) ≤ 2 * T ^ 2 := by positivity
+  rw [coverage_boundary_exact]
+  refine ⟨?_, Nat.floor_le hx⟩
+  have := Nat.lt_floor_add_one (2 * T ^ 2)
+  push_cast
+  linarith
+
 /-! ## Item 1 (W-SIGN-6) — the conjunction as theorem: the residue is irreducible by structure
 
 Formalizes W-SIGN-6's result: *each clause individually free; the conjunction is RH.* The theorem
