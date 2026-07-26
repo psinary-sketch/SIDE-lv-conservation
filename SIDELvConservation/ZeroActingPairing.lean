@@ -289,5 +289,54 @@ theorem positivity_free_obstruction_is_zeroRealization
     · simp [h, Ne.symm h]
   · intro n; simp
 
+/-! ## W-SIGN-6 Prong 1a — the realization ledger
+
+What the programme already holds toward "a self-adjoint operator whose spectrum realizes the
+ζ-zeros", enumerated with what each asset realizes. Grounded: `certifiedInput_not_zeroRealizing`
+(this module); the C₅ distance marker; SIDE-frobenius `indicial_forces_half` @ `2efe9f2` (the −½
+indicial forces σ=1/2 — the *location*, `r²+r+¼=0 ⟹ −r=½`, pure ℚ-algebra); `h1_complete_at_Phi`.
+The ledger's finding, compiled below: each asset realizes something else — the location, the wrong
+spectrum, the distance, or the input surround — and **none realizes the discrete zero spectrum
+`{γ_n}`**. That gap is zero-realization itself. -/
+
+/-- The programme's assets bearing on zero-realization. -/
+inductive RealizationAsset where
+  | certifiedInput
+  | c5Distance
+  | berryKeatingIndicial
+  | h1CompleteAtPhi
+deriving DecidableEq, Repr
+
+/-- What a realization asset actually realizes. `zeroSpectrum` is the target — held by no asset. -/
+inductive RealizesWhat where
+  | location            -- σ = 1/2 (Berry–Keating indicial reflection fixed point)
+  | wrongSpectrum       -- {n²} (the certified input — positive, self-adjoint, WRONG)
+  | distanceMarker      -- the compiled input↔output negative
+  | inputSurround       -- h1 at Φ (surround, not output)
+  | zeroSpectrum        -- the {γ_n} — the missing target
+deriving DecidableEq, Repr
+
+/-- The ledger map: each asset to what it realizes. -/
+def assetRealizes : RealizationAsset → RealizesWhat
+  | .certifiedInput       => .wrongSpectrum
+  | .c5Distance           => .distanceMarker
+  | .berryKeatingIndicial => .location
+  | .h1CompleteAtPhi      => .inputSurround
+
+/-- **The realization ledger's finding: no asset realizes the zero spectrum.** Four assets realize
+four *different* things — location, the wrong spectrum, the distance, the surround; the discrete
+zero spectrum `{γ_n}` is held by none. That absence is exactly zero-realization, the irreducible
+core's first half. -/
+theorem no_asset_realizes_zeroSpectrum (a : RealizationAsset) :
+    assetRealizes a ≠ RealizesWhat.zeroSpectrum := by cases a <;> decide
+
+/-- **The location is owned, the spectrum is not.** The Berry–Keating indicial realizes σ=1/2 (the
+real part), and no asset realizes the discrete ordinates — the delta to zero-realization is precisely
+the imaginary spectrum. -/
+theorem location_owned_spectrum_not :
+    assetRealizes RealizationAsset.berryKeatingIndicial = RealizesWhat.location
+    ∧ ∀ a, assetRealizes a ≠ RealizesWhat.zeroSpectrum := by
+  refine ⟨rfl, fun a => ?_⟩; cases a <;> decide
+
 end RegisterPentagon
 end SIDELvConservation
