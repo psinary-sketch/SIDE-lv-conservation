@@ -79,5 +79,39 @@ theorem certifiedPartialInhabitant
 further — the Voros detection threshold, verbatim from the deposited certificate. -/
 theorem coverage_boundary_exact (T : ℝ) : N₀ T = ⌊2 * T ^ 2⌋₊ := rfl
 
+/-! ## Item 1 (W-SIGN-6) — the conjunction as theorem: the residue is irreducible by structure
+
+Formalizes W-SIGN-6's result: *each clause individually free; the conjunction is RH.* The theorem
+bundles three **compiled** facts and lets their juxtaposition state the irreducibility — it derives
+the structure, it does not define "conjunction = RH". The E-Difficulty programme's first real
+instance: the difficulty is located at the conjunction, not at either clause. -/
+
+/-- **The residue is irreducible by structure.** Neither clause of `ZeroActingPairing` alone yields RH:
+* **clause 1 is free** — a positive self-adjoint operator with a discrete spectrum exists (the certified
+  `{n²}` input, `positivity_free_obstruction_is_zeroRealization`) that does **not** realize the ζ-zeros
+  (first conjunct here);
+* **clause 2 is free** — the finite-range inequality holds to the fixed threshold `N₀(T)` (the certified
+  partial inhabitant, second conjunct) and does not reach all `n`;
+* **only the conjunction implies RH** — the full `ZeroActingPairing`, both clauses jointly over the
+  ζ-zeros, gives RH through the named classical premises (the Weil direction `inequalityToPositivity`;
+  Li's criterion `liCriterion`) — third conjunct.
+So the difficulty is exactly the conjunction. Derives from the compiled pieces (C-3, A2,
+`zeroActingPairing_to_RH`); the equivalence is not encoded — the `⟹ RH` is the compiled conditional,
+the freeness are witnessed facts. -/
+theorem residue_irreducible
+    {lam_A lam_Z lam : ℕ → ℝ} {low : Finset NontrivialZero} {tail : ℕ → ℝ} {T : ℝ}
+    (hZero : NontrivialZeroExistsInStrip)
+    (hdecomp : ∀ n, lam n = lam_A n + lam_Z n)
+    (hV : VerifiedZerosTo T) (hEF : ExplicitFormulaDecomp lam low tail T)
+    (hTail : TailBoundPremise low tail T)
+    (inequalityToPositivity : Register4_channelInequality lam_A lam_Z → Register4_positivity lam)
+    (liCriterion : Register4_positivity lam → RiemannHypothesis) :
+    (¬ RealizesXiZeros certifiedInputSpectrum)
+    ∧ PartialChannelInequality lam_A lam_Z (N₀ T)
+    ∧ (∀ ledger : ℕ → ℝ, ZeroActingPairing lam_A lam_Z ledger → RiemannHypothesis) :=
+  ⟨certifiedInput_not_zeroRealizing hZero,
+   certifiedPartialInhabitant T lam_A lam_Z lam low tail hdecomp hV hEF hTail,
+   fun _ P => zeroActingPairing_to_RH inequalityToPositivity liCriterion P⟩
+
 end RegisterPentagon
 end SIDELvConservation
