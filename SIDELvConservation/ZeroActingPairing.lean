@@ -138,6 +138,44 @@ theorem dhModelLedger_no_pairing {lam_A lam_Z : ℕ → ℝ}
     (P : ZeroActingPairing lam_A lam_Z dhModelLedger) : False :=
   zeroActingPairing_ledger_not_signNeutral P dhModelLedger_signNeutral
 
+/-! ## The edge lemma (Ruling 1a) — Λ≥0 ⟹ drift `D ≥ 0`, and its DH break
+
+The σ=1 **edge** register, compiled as an actual lemma. The prime channel's smooth contribution to
+`λ_Z` — the **drift** `D(n)` — is, in the two-channel packaging, a ledger-weighted sum
+`Σ_m ledger(m)·w(m,n)` with `w` the nonnegative explicit-formula weight. A non-negative ledger against
+a non-negative weight gives `D(n) ≥ 0`.
+
+**Classical (cited):** the ledger non-negativity is `Λ ≥ 0` (von Mangoldt,
+`ArithmeticFunction.vonMangoldt_nonneg`), and the edge itself is de la Vallée Poussin's 3-4-1
+positivity (the σ=1 zero-free region). **New packaging:** `D` as the nonneg-ledger drift in the
+two-channel language. **What it does NOT reach:** the zero-oscillation `E(n)` — its weight is *not*
+sign-definite, so this lemma is silent on the centre (E-characterization). It is the edge, and only
+the edge. -/
+
+/-- The prime-channel **drift** as a ledger-weighted window sum: `D(n) = Σ_{m<N} ledger(m)·w(m,n)`. -/
+def driftSum (ledger : ℕ → ℝ) (w : ℕ → ℕ → ℝ) (N n : ℕ) : ℝ :=
+  ∑ m ∈ Finset.range N, ledger m * w m n
+
+/-- **The edge lemma.** A non-negative ledger against a non-negative weight yields a non-negative
+drift. At `ledger = Λ` this is `Λ ≥ 0 ⟹ D(n) ≥ 0` — the σ=1 edge in two-channel language. Reaches
+only the edge; `E` (the zeros) is untouched. -/
+theorem edge_drift_nonneg {ledger : ℕ → ℝ} {w : ℕ → ℕ → ℝ} {N n : ℕ}
+    (hL : ∀ m, 0 ≤ ledger m) (hw : ∀ m, 0 ≤ w m n) :
+    0 ≤ driftSum ledger w N n :=
+  Finset.sum_nonneg fun m _ => mul_nonneg (hL m) (hw m)
+
+/-- **The DH break — the discriminator run on the lemma (its content).** For the sign-neutral DH
+ledger the edge lemma's hypothesis fails, and the drift genuinely goes negative: with the weight
+concentrated at the DH model's negative entry (`m=3`, value `−1`), `D < 0`. The edge lemma has no
+purchase on a sign-neutral ledger — exactly its content: drift positivity is the `Λ ≥ 0` edge,
+ζ-specific; Davenport–Heilbronn (no positive ledger) breaks it. -/
+theorem edge_drift_neg_for_signNeutral :
+    ∃ (w : ℕ → ℕ → ℝ) (N n : ℕ), (∀ m, 0 ≤ w m n) ∧ driftSum dhModelLedger w N n < 0 := by
+  refine ⟨fun m _ => if m = 3 then 1 else 0, 5, 0, ?_, ?_⟩
+  · intro m; by_cases h : m = 3 <;> simp [h]
+  · simp only [driftSum, Finset.sum_range_succ, Finset.sum_range_zero, dhModelLedger]
+    norm_num
+
 /-! ## A1 — the 𝔽_q witness anatomy: the four clauses over the function field, and the ℚ-obstruction
 
 Over a smooth projective curve `C / 𝔽_q` the `ZeroActingPairing` type is **inhabited** — this is Weil
