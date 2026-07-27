@@ -338,5 +338,72 @@ theorem location_owned_spectrum_not :
     ∧ ∀ a, assetRealizes a ≠ RealizesWhat.zeroSpectrum := by
   refine ⟨rfl, fun a => ?_⟩; cases a <;> decide
 
+/-! ## W-SUBSTRATE (2026-07-27) — the two deepest-face SPECS, typed as interfaces
+
+Arm 1 types the sign wall's single-object realization `X`; Arm 2 types the derivative wall's
+family-requirement. Both are SPECIFICATIONS (Prop structures / named premises); NEITHER asserts an
+instance — existence disclaimed, as with `ZeroActingPairing`. The census (PATHS §ANNEX C/D) carries
+the geometric interpretation and the field-candidate grading; here is the compiled operational core. -/
+
+/-- **Arm 1 — the X-realization spec.** The single-object geometric realization `X` of the sign
+wall's deepest face. GEOMETRIC INTERPRETATION (documented, deliberately NOT encoded as opaque Lean
+fields — contentless Props would be the encode-not-derive trap): (G1) `X` is a geometric object over
+the arithmetic base whose Frobenius-analog realizes the ξ-ordinates; (G2) the self-product `X × X`
+carries the intersection / Hodge-index pairing — the Weil positivity, UNIVERSAL because it is one
+object's self-product, NOT a family (the W-FAMILY distinction); (G3) the functional equation is
+Poincaré duality on `X`; (G4) the Euler ledger is the point-count of `X`. The three fields below are
+the OPERATIONAL content those interpretations must supply; they compose to a `ZeroActingPairing`, so
+`X` is exactly `zeroActing`, single-object in kind. -/
+structure XRealization (lam_A lam_Z ledger : ℕ → ℝ) : Prop where
+  /-- (X1 ← G1,G3) `X` hands over the self-adjoint operator: the Hilbert–Pólya R5-output. -/
+  handsOverOperator : Register5_output_HilbertPolya
+  /-- (X2 ← G2) the `X × X` intersection pairing is the FE-even positivity that yields the channel
+  inequality (single-object / universal, not family-sourced). -/
+  selfProductPositivity : Register5_output_HilbertPolya → Register4_channelInequality lam_A lam_Z
+  /-- (X3 ← G4) the Euler ledger is the point-count of `X`, hence non-negative. -/
+  pointCountLedger : ∀ m, 0 ≤ ledger m
+
+/-- **INTERFACE — XRealization → ZeroActingPairing** (`X` is single-object-kind `zeroActing`). Three
+clauses direct; `distinctFromInput` from the compiled negative under the named strip premise. No
+instance asserted. -/
+theorem xRealization_to_zeroActingPairing {lam_A lam_Z ledger : ℕ → ℝ}
+    (nontrivialZeroInStrip : NontrivialZeroExistsInStrip)
+    (X : XRealization lam_A lam_Z ledger) :
+    ZeroActingPairing lam_A lam_Z ledger :=
+  { zeroActing := X.handsOverOperator
+    yieldsInequality := X.selfProductPositivity
+    eulerConsuming := X.pointCountLedger
+    distinctFromInput := certifiedInput_not_zeroRealizing nontrivialZeroInStrip }
+
+/-- **INTERFACE — XRealization → RiemannHypothesis** (the compiled conditional, via `zeroActing`). -/
+theorem xRealization_to_RH {lam_A lam_Z ledger lam : ℕ → ℝ}
+    (nontrivialZeroInStrip : NontrivialZeroExistsInStrip)
+    (inequalityToPositivity :
+      Register4_channelInequality lam_A lam_Z → Register4_positivity lam)
+    (liCriterion : Register4_positivity lam → RiemannHypothesis)
+    (X : XRealization lam_A lam_Z ledger) :
+    RiemannHypothesis :=
+  zeroActingPairing_to_RH inequalityToPositivity liCriterion
+    (xRealization_to_zeroActingPairing nontrivialZeroInStrip X)
+
+/-- **Arm 2 — the simplicity family spec.** The derivative wall's family-requirement (§ANNEX D),
+typed as a SPEC. GEOMETRIC INTERPRETATION (documented): a family `𝓕 ∋ ζ` with a large geometric
+monodromy group, an equidistribution measure (the symmetry type), and a conductor ordering. What such
+a family DELIVERS is only GENERIC simplicity (Katz–Sarnak / Kowalski) — modeled here by the member
+index `ℕ` (conductor order) and simplicity for every member past the distinguished index `0` (= ζ). -/
+structure SimplicityFamilySpec (simpleAt : ℕ → Prop) : Prop where
+  /-- (F-generic ← monodromy/equidistribution over a conductor ordering) simplicity for every member
+  past the distinguished index — density-1 / all-but-the-exception, here every `n ≠ 0`. -/
+  deliversGeneric : ∀ n, n ≠ 0 → simpleAt n
+
+/-- **The family's KNOWN residual — generic is NOT universal (the measure-zero escape).** A witness
+meeting `SimplicityFamilySpec` need not give `simpleAt 0` (index `0` = the distinguished member, ζ):
+the family delivers generic simplicity but not ζ's own. This is the honest logical shape of the
+measure-zero escape — WHY no family closes the derivative wall, and why its core differs in kind from
+Arm 1's single-object `X` (W-FAMILY). Not a claim about any concrete ζ-family; the residual clause. -/
+theorem simplicityFamily_generic_not_universal :
+    ∃ simpleAt : ℕ → Prop, SimplicityFamilySpec simpleAt ∧ ¬ (∀ n, simpleAt n) :=
+  ⟨fun n => n ≠ 0, ⟨fun _ h => h⟩, fun h => (h 0) rfl⟩
+
 end RegisterPentagon
 end SIDELvConservation
