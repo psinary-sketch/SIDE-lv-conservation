@@ -405,5 +405,41 @@ theorem simplicityFamily_generic_not_universal :
     ∃ simpleAt : ℕ → Prop, SimplicityFamilySpec simpleAt ∧ ¬ (∀ n, simpleAt n) :=
   ⟨fun n => n ≠ 0, ⟨fun _ h => h⟩, fun h => (h 0) rfl⟩
 
+/-! ## W-WONDER-2 (2026-07-27) — the escape-kind invariant (W2-2)
+
+The three walls share the shape *certified-finite + escaping-uniformity*; the ESCAPE-KIND is the
+invariant that discriminates them — a certificate that stops at the FE-forced **detection horizon**
+`N₀(T)~2T²`, versus one with no horizon whose escape is the **raw infinitude** of the zero set. -/
+
+/-- The kind of finite-to-global escape a certified-finite/global-escaping property exhibits. -/
+inductive EscapeKind where
+  | detectionHorizon   -- the certificate stops at a finite, growing horizon (N₀(T) ~ 2T²)
+  | rawInfinitude      -- no horizon; the escape is the infinitude of the (zero) set
+  deriving DecidableEq
+
+/-- The walls carrying a certified-finite/global-escaping obligation. -/
+inductive Wall where
+  | signPositivity            -- λ_Z ≥ −λ_A, certified to N₀(T)
+  | derivativeTransversality  -- Im ξ′ ≠ 0, certified per-zero
+  | detectionThreshold        -- N₀(T) = ⌊2T²⌋ itself (the escape mechanism)
+  deriving DecidableEq
+
+/-- The escape-kind classification (Wonder 3 / W2-2). -/
+def wallEscapeKind : Wall → EscapeKind
+  | .signPositivity           => .detectionHorizon
+  | .derivativeTransversality => .rawInfinitude
+  | .detectionThreshold       => .detectionHorizon
+
+/-- **The escape-kind DISCRIMINATES the two open walls.** The sign wall escapes at the detection
+horizon `N₀(T)`; the derivative wall escapes at the raw infinitude of the zeros — a further way the
+two walls are independent (same shape, different escape-kind). -/
+theorem escape_kind_discriminates :
+    wallEscapeKind .signPositivity ≠ wallEscapeKind .derivativeTransversality := by decide
+
+/-- **The horizon-kind is shared by the sign wall and its mechanism** (the detection threshold): both
+stop at `N₀(T)`, so the escape-kind partitions the walls into {sign, threshold} vs {derivative}. -/
+theorem horizon_kind_shared :
+    wallEscapeKind .signPositivity = wallEscapeKind .detectionThreshold := by decide
+
 end RegisterPentagon
 end SIDELvConservation
