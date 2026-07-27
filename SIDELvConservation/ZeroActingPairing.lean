@@ -441,5 +441,40 @@ stop at `N₀(T)`, so the escape-kind partitions the walls into {sign, threshold
 theorem horizon_kind_shared :
     wallEscapeKind .signPositivity = wallEscapeKind .detectionThreshold := by decide
 
+/-! ## W-UNION (2026-07-27) — the two partial Weil-positivities as place x height truncations
+
+CCM prove Weil positivity at the ARCHIMEDEAN place (all heights); our `partialPositivity_finiteRange`
+proves it at ALL places to BOUNDED height (n <= N0). The global Weil positivity is the conjunction
+over (place, height); the two partials cover two axes, leaving one quadrant. -/
+
+inductive WeilPlace where | archimedean | nonArchimedean
+  deriving DecidableEq
+
+inductive HeightRange where | bounded | unbounded
+  deriving DecidableEq
+
+/-- CCM archimedean-place positivity covers the archimedean place at every height. -/
+def ccmCovers : WeilPlace -> HeightRange -> Bool
+  | .archimedean, _ => true
+  | .nonArchimedean, _ => false
+
+/-- Our finite-range certificate covers every place to bounded height. -/
+def finiteRangeCovers : WeilPlace -> HeightRange -> Bool
+  | _, .bounded => true
+  | _, .unbounded => false
+
+/-- The union of the two partials. -/
+def unionCovers (p : WeilPlace) (h : HeightRange) : Bool := ccmCovers p h || finiteRangeCovers p h
+
+/-- **The union covers three of the four (place, height) quadrants and leaves exactly one:
+the non-archimedean / unbounded-height quadrant** -- the positivity of the prime (finite-place)
+contribution to the Weil functional at arbitrarily high zeros. This is the residue's sharpest
+location: not "the global positivity" but one named quadrant. -/
+theorem union_leaves_nonarch_unbounded :
+    unionCovers .archimedean .bounded = true
+    /\ unionCovers .archimedean .unbounded = true
+    /\ unionCovers .nonArchimedean .bounded = true
+    /\ unionCovers .nonArchimedean .unbounded = false := by decide
+
 end RegisterPentagon
 end SIDELvConservation
