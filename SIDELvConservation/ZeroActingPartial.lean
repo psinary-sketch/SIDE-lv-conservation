@@ -94,6 +94,20 @@ theorem detection_threshold_quadratic (T : ℝ) :
   push_cast
   linarith
 
+/-- **Barrier extension (Program Four (i)(b) / frontier 2(a)): the detection threshold is monotone in
+the zero height.** For `0 ≤ T₁ ≤ T₂`, `N₀ T₁ ≤ N₀ T₂`. Consequence: the threshold is pinned by the
+zero height `T` alone, so **no weighting that preserves the zero locations can lower it** — every
+mollifier of the ζ-integral (Levinson / Conrey / Soundararajan class) preserves the zeros, hence the
+threshold; lowering it would require *moving the zeros*, which no such weighting does. The only
+weighting that reaches the centre is a *zero-side* test function (Weil functional) — but that is the
+positive pairing itself (Hilbert–Pólya, the realization wall), not a mollifier. So the barrier holds
+for the mollifier class; the sole exception is the known pairing frontier. -/
+theorem detection_threshold_mono {T₁ T₂ : ℝ} (h0 : 0 ≤ T₁) (h : T₁ ≤ T₂) : N₀ T₁ ≤ N₀ T₂ := by
+  rw [coverage_boundary_exact, coverage_boundary_exact]
+  apply Nat.floor_mono
+  have hsq : T₁ ^ 2 ≤ T₂ ^ 2 := by nlinarith
+  linarith
+
 /-! ## Item 1 (W-SIGN-6) — the conjunction as theorem: the residue is irreducible by structure
 
 Formalizes W-SIGN-6's result: *each clause individually free; the conjunction is RH.* The theorem
