@@ -32,6 +32,15 @@ DISCLAIMED; pentagon precedent: STRUCTURE compiled, never the equivalence).
 - `certifiedInput_not_zeroRealizing` (this repo, RegisterPentagon): the compiled negative that
   warrants the FAIL row.
 
+SECTION 0 — THE SCREEN'S FIRST THEOREM OF USE (filed 2026-08-02, from the maiden run).
+The screen mechanically separates CARRIER candidates (objects that would BE the pairing:
+Connes-Consani, de Branges, Sonin/CCM — each passes the FE clauses and fails-or-leaves-open
+exactly the polarization, in its own vocabulary) from CRITERION routes (tests that would DETECT
+the pairing's consequence: the Li route fails the carrier clause itself — a single-index
+diagonal, not an object). Screen v2 (the register-lattice weakening): realizesTargetSpectrum
+may weaken to diagonal-realization on the Bombieri-Lagarias family — every v1 verdict survives;
+a criterion still supplies no carrier. The taxonomy is the instrument's own first finding.
+
 BUILD-4 rides this pass: the Δn₄ row (three-arm probe Arm 1; Face-E two-witness rider (b)) —
 the count DERIVES; the cohomological reading carried as a named-premise slot, INTERFACES.
 
