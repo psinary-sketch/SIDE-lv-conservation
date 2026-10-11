@@ -1,38 +1,12 @@
-# SIDE-lv-conservation
+# The legacy map of sorry-quarantine-SIDE-lv-conservation
 
-Lean 4 kernel — Mellin factorization and s-darkness of the completed zeta; the step-(9) bridge pinned. PLACE TO STAND programme.
+This branch holds, as they stood, the declarations that b648 quarantined from `main` under the author’s ruling (R258)(2): each was closed by `sorry` and entered `main` before the standing rule that no `sorry` reaches any `main` (relay OPEN_TRAILS :11508). The branch’s tip, `2f71068`, is the commit of `main` they were quarantined from; `main` (`b2238d4` when this map was written) no longer carries them, and the kernel’s `ERRATA.md` on `main` names each. Each row gives the declaration’s file and line at the tip, its statement, the date it entered `main`, and its successor in the built kernel -- the declaration in a lean_lib of `main` proving the same content, by file and line -- or “no successor; superseded by” with the reason. Written by relay b649 under (R259)(3) from relay `data/b648_sorry_classification.json`.
 
-Lean 4 kernel formalizing the Conservation of Spectra content (PLACE TO
-STAND programme, Ch. 13) against Mathlib. Lean v4.29.1, Mathlib pin
-`5e932f9`. Mathlib is the sole dependency.
+The kernel’s own `README.md`, which this map replaces on this branch alone, stands whole at the tip `2f71068` (blob `879c900ee218`) and on `main`.
 
-**T1 — Mellin factorization. Compiled, 0 sorry.** The completed Riemann
-zeta function factors through the Mellin transform of a fixed function:
-for `1 < re(s)`, `completedRiemannZeta s = mellin Φ (s/2)` with
-`Φ(t) = ((evenKernel 0 t : ℂ) − 1)/2`, defined without reference to `s`.
-Proved via Mathlib's `WeakFEPair.hasMellin`. The spectral parameter
-enters only through the kernel `t^s` — stated as a theorem, not prose.
+| # | file :line (at `2f71068`) | kind | declaration | its `sorry` | statement | entered main | successor |
+|:--|:--|:--|:--|:--|:--|:--|:--|
+| 1 | `PinnedGoal.lean` :17 | example | `(example)` | :23 | `example (𝒞 : Set Coupling) (s : ℂ) (h : ∀ C ∈ 𝒞, PerClassExcludes C s) : ∃ Φ : ℝ → ℂ, (∀ C ∈ 𝒞, C Φ) ∧ mellin Φ (s / 2) ≠ 0` | 2026-07-09 | no successor; superseded by SIDELvConservation/T3_StepNineBridge.lean :108, the goal it reproduced, the theorem b648 RESTATED as a Prop on branch b648-restate-SIDE-lv-conservation |
 
-**T2 — s-darkness / no-other-channel. Compiled, 0 sorry** (six lemmas).
-The Mellin transform's two-input exhaustion elevated to named theorems;
-T2d packages the zero set of the completed zeta on the convergence
-half-plane as a function of `Φ` alone.
+1 quarantined declarations (1 `sorry` lines); 0 with a successor in the built kernel.
 
-**T3 — the per-class ⟹ all-combinations bridge. Pinned at exactly one
-sorry** (`T3_StepNineBridge.lean`, citing programme finding
-F.2026-07-09-b), goal state reproduced and convertibility-checked in
-`PinnedGoal.lean`:
-
-```
-∀ C ∈ 𝒞, ∃ Φ, C Φ ∧ mellin Φ (s/2) ≠ 0  ⊢  ∃ Φ, (∀ C ∈ 𝒞, C Φ) ∧ mellin Φ (s/2) ≠ 0
-```
-
-The unrestricted bridge is a `∀∃ → ∃∀` commutation and is not expected
-to hold in general; under the programme's *Determination* condition the
-witness is shared (T1's fixed `Φ`) and the bridge closes. The closing
-theorem-pair is scheduled for v0.2.0.
-
-Axiom audit: all compiled theorems depend on
-`{propext, Classical.choice, Quot.sound}` only; the single pinned
-declaration additionally carries `sorryAx` and nothing else. No custom
-axioms, no `native_decide`. Full details in `VERIFICATION_TRANSCRIPT.md`.
