@@ -3,11 +3,7 @@ import SIDELvConservation.RegisterPentagon
 /-!
 # ZeroActingPairing — the compiled SPECIFICATION of the center-object
 
-W-ORD-PAIRING-INTERFACE (2026-07-25). **Warrant:** the E-characterization proved that every
-structure capable of bounding the zero-oscillation `E(n)` of `λ_Z` by the archimedean channel
-`λ_A` is *pairing-positivity* shaped (FE-cancellation fails; density gives only the σ=1 edge;
-the only centre-reaching structure is a positive pairing on the zeros — the Weil-functional /
-Hilbert–Pólya shape).
+W-ORD-PAIRING-INTERFACE (2026-07-25). The E-characterization is the programme's argument, not a declaration of this file.
 
 This module compiles the **TYPE** the E-characterization named — a *zero-acting* positive
 pairing that is *Euler-consuming* (breaks for a sign-neutral ledger, i.e. for Davenport–
@@ -21,10 +17,10 @@ never the equivalence). INTERFACES grammar throughout; every non-native step is 
 the disclaimer text extends — the register now holds a compiled *interface*, still no claimed
 witness.
 
-**Salt-check (run before commit).** Not a shell: the structure carries four genuine `Prop`
-fields, and the two typing clauses kill the trivial witness — a bare diagonal enumeration of the
-zeros dies on `distinctFromInput` (via `certifiedInput_not_zeroRealizing`) and a sign-neutral
-ledger dies on `eulerConsuming`. The RH implication is a real composition through named
+**Salt-check (run before commit).** The structure carries four Prop fields; a sign-neutral ledger dies on eulerConsuming (dhModelLedger_no_pairing);
+distinctFromInput is the closed requirement that the certified {n²} spectrum is not zero-realizing, which forces any
+witness spectrum of zeroActing to differ from {n²} but does not exclude a diagonal enumeration of the zeros
+(RegisterPentagon :183). The RH implication is a real composition through named
 *classical* premises (the Weil-criterion direction; the inequality→positivity step; Li's
 criterion — Bombieri–Lagarias 1999, not in Mathlib), with the pairing's **existence disclaimed**
 — the compiled object is the CONDITIONAL, never a claimed instance (Rule 3: named-INTERFACES,
@@ -74,10 +70,9 @@ theorem zeroActingPairing_to_RH {lam_A lam_Z ledger lam : ℕ → ℝ}
     RiemannHypothesis :=
   liCriterion (inequalityToPositivity (zeroActingPairing_to_channelInequality P))
 
-/-- **The distinct-from-input clause is dischargeable** (not open): the certified `{n²}` input
-spectrum genuinely fails to realize the zeros, given a nontrivial zero exists in the strip.
-So `distinctFromInput` is a *typing* constraint the object satisfies by the compiled negative,
-not an added open premise. -/
+/-- **The distinct-from-input clause is discharged under the named strip premise**: given NontrivialZeroExistsInStrip (a
+named premise, OPEN in the premise table), the certified {n²} input spectrum fails to realize the zeros, so
+distinctFromInput reduces to that one premise. -/
 theorem distinctFromInput_discharged
     (nontrivialZeroInStrip : NontrivialZeroExistsInStrip) :
     ¬ RealizesXiZeros certifiedInputSpectrum :=
@@ -140,7 +135,10 @@ theorem dhModelLedger_no_pairing {lam_A lam_Z : ℕ → ℝ}
 
 /-! ## The edge lemma (Ruling 1a) — Λ≥0 ⟹ drift `D ≥ 0`, and its DH break
 
-The σ=1 **edge** register, compiled as an actual lemma. The prime channel's smooth contribution to
+The edge lemma's arithmetic core, compiled: for an abstract ledger and weight, a non-negative ledger against a
+non-negative weight gives a non-negative finite drift sum (edge_drift_nonneg), and the DH model ledger gives a
+negative one (edge_drift_neg_for_signNeutral); its reading as the σ=1 edge at ledger = Λ, and the 3-4-1 zero-free
+region, are cited, not compiled. The prime channel's smooth contribution to
 `λ_Z` — the **drift** `D(n)` — is, in the two-channel packaging, a ledger-weighted sum
 `Σ_m ledger(m)·w(m,n)` with `w` the nonnegative explicit-formula weight. A non-negative ledger against
 a non-negative weight gives `D(n) ≥ 0`.
@@ -178,8 +176,8 @@ theorem edge_drift_neg_for_signNeutral :
 
 /-! ## A1 — the 𝔽_q witness anatomy: the four clauses over the function field, and the ℚ-obstruction
 
-Over a smooth projective curve `C / 𝔽_q` the `ZeroActingPairing` type is **inhabited** — this is Weil
-1948 (the Riemann Hypothesis for curves), the one place a genuine witness is known. This section
+Over a smooth projective curve C / 𝔽_q the analogue of the four clauses is supplied by Weil 1948 (cited, not compiled;
+the compiled ZeroActingPairing is the ℚ type and has no 𝔽_q instance here). This section
 records, clause by clause, *what supplies each requirement over 𝔽_q* and *whether it transfers to ℚ*.
 It grounds against the corpus's own C₅ split (BALANCE_AND_POSITIVITY §D.2 / the FIFTH REGISTER: over
 𝔽_q the two coincide, Weil supplying the output from Hodge-index / Castelnuovo positivity on `C × C`;
@@ -207,7 +205,7 @@ and the theorem reads it back — no verdict is proved here, and the obstruction
 * `eulerConsuming`  — **TRANSFERS.** `ζ` has an Euler product with `Λ(n) ≥ 0` (von Mangoldt); a
   sign-neutral ledger is excluded (`zeroActingPairing_ledger_not_signNeutral`, this module). Clean.
 * `distinctFromInput`— **TRANSFERS.** The certified `{n²}` input does not realize the ξ-zeros
-  (`distinctFromInput_discharged`, this module). Clean.
+  (`distinctFromInput_discharged`, this module). distinctFromInput transfers only under the named premise NontrivialZeroExistsInStrip (OPEN).
 
 **Reading:** the 𝔽_q → ℚ obstruction is *exactly* the two geometric clauses (1) and (2) — the
 Hilbert–Pólya operator and the Weil-positivity pairing — the same two the E-characterization and the
@@ -259,10 +257,9 @@ theorem exactly_two_clauses_obstruct :
 
 The pairing-construction attempt's compiled yield. The R5-output schema
 `Register5_output_HilbertPolya` bundles five conjuncts: a symmetric pairing, positive-definiteness,
-self-adjointness of an operator, the spectrum on its diagonal, and *zero-realization*. This lemma
-shows the certified input spectrum `{n²}` witnesses the **first four** — the whole positivity /
-self-adjoint / operator structure — with the identity pairing and the `{n²}` diagonal operator, and
-fails **only** the fifth (`certifiedInput_not_zeroRealizing`). So the positivity structure is *free*;
+self-adjointness of an operator, the spectrum on its diagonal, and *zero-realization*. This lemma shows the certified input spectrum {n²} witnesses the first four conjuncts with the identity pairing and
+the {n²} diagonal operator, and, under the named premise NontrivialZeroExistsInStrip (OPEN), fails the fifth
+(certifiedInput_not_zeroRealizing). So the positivity structure is *free*;
 the schema's irreducible content is zero-realization alone (pure Hilbert–Pólya). This asserts **no**
 positivity on the ζ-zeros (that is RH); it is a *decoupling* — the opposite of an encode. The
 disclaimer stands unchanged: positivity is not proven on the zeros, it is shown cheap on the wrong
@@ -351,9 +348,9 @@ fields — contentless Props would be the encode-not-derive trap): (G1) `X` is a
 the arithmetic base whose Frobenius-analog realizes the ξ-ordinates; (G2) the self-product `X × X`
 carries the intersection / Hodge-index pairing — the Weil positivity, UNIVERSAL because it is one
 object's self-product, NOT a family (the W-FAMILY distinction); (G3) the functional equation is
-Poincaré duality on `X`; (G4) the Euler ledger is the point-count of `X`. The three fields below are
-the OPERATIONAL content those interpretations must supply; they compose to a `ZeroActingPairing`, so
-`X` is exactly `zeroActing`, single-object in kind. -/
+Poincaré duality on `X`; (G4) the Euler ledger is the point-count of `X`. The three fields below are the OPERATIONAL content those interpretations must supply; with the named premise
+NontrivialZeroExistsInStrip (OPEN) they compose to a ZeroActingPairing (xRealization_to_zeroActingPairing), so X is
+zeroActing, single-object in kind. -/
 structure XRealization (lam_A lam_Z ledger : ℕ → ℝ) : Prop where
   /-- (X1 ← G1,G3) `X` hands over the self-adjoint operator: the Hilbert–Pólya R5-output. -/
   handsOverOperator : Register5_output_HilbertPolya
@@ -443,8 +440,8 @@ theorem horizon_kind_shared :
 
 /-! ## W-UNION (2026-07-27) — the two partial Weil-positivities as place x height truncations
 
-CCM prove Weil positivity at the ARCHIMEDEAN place (all heights); our `partialPositivity_finiteRange`
-proves it at ALL places to BOUNDED height (n <= N0). The global Weil positivity is the conjunction
+CCM prove Weil positivity at the archimedean place (cited); our partialPositivity_finiteRange (INTERFACES) gives
+finite-range Li positivity for n ≤ N₀(T) under three named premises. The global Weil positivity is the conjunction
 over (place, height); the two partials cover two axes, leaving one quadrant. -/
 
 inductive WeilPlace where | archimedean | nonArchimedean

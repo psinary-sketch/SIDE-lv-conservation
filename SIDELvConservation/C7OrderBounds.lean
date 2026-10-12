@@ -223,7 +223,7 @@ theorem Gamma_le_exp {y : ℝ} (hy : 1 ≤ y) :
 inside `A·(n·log(n+2)) + B` — `n = ‖s‖`, `w = x₊`. The trick that defeats the `n≈0` case-behavior:
 convert every linear term to a log term through the uniform `log(n+2) ≥ log 2 > 0`, so no case split
 is needed. The residual log term is absorbed by `log(n+2) ≤ n+1` (`Real.log_le_sub_one_of_pos` —
-the same `log u ≤ u−1` that killed complex Stirling). No `nlinarith`, no cases. -/
+the same `log u ≤ u−1` that killed complex Stirling). One `nlinarith` (for `w + 2 ≤ (n + 2)^2` at :237) and no case split. -/
 theorem exp_arg_bound {K : ℝ} (hK : 0 ≤ K) : ∃ A B : ℝ, 0 ≤ A ∧ ∀ n w : ℝ,
     0 ≤ n → 1 ≤ w → w ≤ n / 2 + 1 →
       w * (K + 2 * Real.log (w + 2)) ≤ A * (n * Real.log (n + 2)) + B := by

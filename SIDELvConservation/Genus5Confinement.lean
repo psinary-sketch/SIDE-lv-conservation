@@ -103,9 +103,8 @@ theorem hgolay_ne_zero : Hgolay ≠ 0 := by
 /-- **Golay confinement, the part certified here.** Five roots, pairwise separated by the six
 explicit rationals of the sign table, every one of them strictly inside `(0, 4)`.
 
-Together with `hgolay_natDegree` (degree 5) this forces the certificate to split over ℝ with
-all roots in `(0,4)` — but **that last closure step is NOT compiled here** (see the module's
-gap note); what is certified is the existence and location of the five. -/
+together with hgolay_natDegree (degree 5) this closes in golay_confined below, which compiles that the certificate's
+root multiset has cardinality 5 and every root lies in (0, 4). -/
 theorem golay_five_roots_in_interval :
     ∃ r₁ r₂ r₃ r₄ r₅ : ℝ,
       (0 < r₁ ∧ r₁ < 1/10) ∧ (1/10 < r₂ ∧ r₂ < 1/2) ∧ (1/2 < r₃ ∧ r₃ < 3/2) ∧

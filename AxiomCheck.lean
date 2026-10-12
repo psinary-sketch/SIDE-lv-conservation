@@ -8,14 +8,11 @@ import SIDELvConservation.CouplingsAtPhi
 /-!
 # Axiom audit
 
-Run `lake env lean AxiomCheck.lean` to reproduce the `#print axioms`
-output for every theorem in this kernel.
+Run `lake env lean AxiomCheck.lean` to reproduce the `#print axioms` output for T1, T2, the T3 family and the W-8
+C₇-order chain (not every theorem of the kernel).
 
 T1 and T2 are expected to reduce to Mathlib's standard axiomatic base
-(`Classical.choice`, `Quot.sound`, `propext`).  T3 is expected to
-additionally list `sorryAx` due to the pinned emergent-totality gap
-(FINDINGS F.2026-07-09-b) — this is the intended `sorry` and its
-presence is the compiler's verdict.
+(`Classical.choice`, `Quot.sound`, `propext`).
 -/
 
 open SIDELvConservation

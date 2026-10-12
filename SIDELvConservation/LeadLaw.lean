@@ -27,7 +27,8 @@ coefficient is therefore its top coefficient `c g`; (iii) **that `c g` is the to
 coefficient** — this was a second stipulation at the first pass and is now derived, in
 `FieldLayer.top_coeff_of_expansion`, by reading the degree-`2g` coefficient off the expansion
 relation; (iv) that the functional equation forces the top normalized coefficient to equal
-`p 0`; hence (v) that the certificate `H = h * hᵒ` has leading coefficient `p 0 ^ 2`.
+`p 0`; hence (v) that the certificate h has leading coefficient p 0, so the product of two copies of that leading coefficient
+is p 0 ^ 2 (the step to H = h * h-conjugate, whose conjugate fixes p 0, is argued, not compiled).
 
 **The premise count moved from two to one at the field layer, exactly as the scoping predicted.**
 Duursma's functional equation does not convert at any field cost — it is a theorem about codes,

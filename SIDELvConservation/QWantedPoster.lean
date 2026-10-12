@@ -8,8 +8,9 @@ unbuilt center-object Q from its constraint set — "a wanted poster" (THE_RESID
 the constraint set pins every property EXCEPT the positive polarization, which is precisely the
 disclaimed clause. This module compiles that constraint set as a finite PROFILE layer over the
 typed specification `ZeroActingPairing` (this repo, held branch), and arms a conformance SCREEN
-that earns its grade by DISCRIMINATING: the two proved suppliers PASS, a known-wrong candidate
-FAILS on exactly the clause the compiled negative `certifiedInput_not_zeroRealizing` certifies.
+that earns its grade by DISCRIMINATING: the two proved suppliers' hand-assigned profiles PASS, and a known-wrong candidate's profile FAILS, with
+realizesTargetSpectrum false warranted (in real-part form, under its named premise) by the compiled negative
+certifiedInput_not_zeroRealizing and pairIndexed and distinctFromCertifiedInput false by assignment;
 
 **ANTI-OVERCLAIM (load-bearing).** The profiles are MODEL-LEVEL Boolean summaries. The two PASS
 rows record the SHAPES of proved instances (Weil's intersection-form route; the Lee–Yang
@@ -33,11 +34,7 @@ DISCLAIMED; pentagon precedent: STRUCTURE compiled, never the equivalence).
   warrants the FAIL row.
 
 SECTION 0 — THE SCREEN'S FIRST THEOREM OF USE (filed 2026-08-02, from the maiden run).
-The screen mechanically separates CARRIER candidates (objects that would BE the pairing:
-Connes-Consani, de Branges, Sonin/CCM — each passes the FE clauses and fails-or-leaves-open
-exactly the polarization, in its own vocabulary) from CRITERION routes (tests that would DETECT
-the pairing's consequence: the Li route fails the carrier clause itself — a single-index
-diagonal, not an object). Screen v2 (the register-lattice weakening): realizesTargetSpectrum
+the carrier/criterion taxonomy of SECTION 0 is a reading of the maiden run, with no profile compiled here; Screen v2 (the register-lattice weakening): realizesTargetSpectrum
 may weaken to diagonal-realization on the Bombieri-Lagarias family — every v1 verdict survives;
 a criterion still supplies no carrier. The taxonomy is the instrument's own first finding.
 
@@ -50,9 +47,8 @@ the count DERIVES; the cohomological reading carried as a named-premise slot, IN
 namespace SIDELvConservation
 namespace QWantedPoster
 
-/-- The wanted-poster constraint set, enumerated. Each constraint is one clause of the
-characterization THE_RESIDUE_OF_RH v1.1 §6 assembled; the enumeration is the compiled
-form of "the constraint set pins every property except the positive polarization." -/
+/-- The wanted-poster constraint set, enumerated. each constructor names one clause of the characterization THE_RESIDUE_OF_RH v1.1 Sec. 6 assembled; that the set pins
+every property except the positive polarization is the residue's reading, not stated by this type. -/
 inductive QConstraint where
   /-- pair-index carrier: the object is a PAIRING (acts on pairs; index-arity 2) — the
   index-arity coordinate of the keystone; both proved suppliers are pair-index. -/
@@ -61,9 +57,9 @@ inductive QConstraint where
   polarization over 𝔽_q; the ferromagnetic one-sign structure in Lee–Yang) — THE UNPINNED
   CLAUSE over ℚ (residue §6: pinned everywhere except here). -/
   | positiveOnFEEven
-  /-- realization: the spectrum/zero-set is the TARGET one (Frobenius eigenvalues over 𝔽_q;
-  the confined zeros in Lee–Yang; the ξ-ordinates for ζ) — the clause the certified input
-  provably fails (`certifiedInput_not_zeroRealizing`). -/
+  /-- realization: the spectrum/zero-set is the TARGET one (Frobenius eigenvalues over F_q; the confined zeros in
+  Lee-Yang; the xi-zeros for zeta) -- the certified input fails its real-part form under the named premise
+  NontrivialZeroExistsInStrip (certifiedInput_not_zeroRealizing); the ordinate form is open (C5-DIST-A). -/
   | realizesTargetSpectrum
   /-- the ledger trace: the object consumes a non-negative counting ledger (point counts
   over 𝔽_q; positive coefficients in Lee–Yang; `Λ(n) ≥ 0` for ζ) — the Euler-consuming
@@ -168,11 +164,9 @@ theorem delta_n4_count :
       formationTuple_Fq.2.2.1 = formationTuple_Q.2.2.1 := by
   decide
 
-/-- **INTERFACES — the Δn₄ row.** The graded row: the count (DERIVES, above) together with the
-cohomological reading carried as a named-premise SLOT — `h2Reading` holds the proposition "the
-missing n₄ interface is the codomain of the cup-product pairing over ℚ" as a field, never
-asserted. Instantiating this structure requires SUPPLYING the reading; the row's grade is
-INTERFACES, the identification never forced. -/
+/-- **INTERFACES — the Δn₄ row.** The Delta-n4 row: the count (DERIVES, above) together with a Prop-valued slot h2Reading meant to hold the
+cohomological reading; the type does not fix which proposition fills the slot and no instance requires a proof of it,
+so the reading is recorded, not carried as a premise. -/
 structure DeltaN4Row where
   /-- the certified count: Δn₄ = +1 (dischargeable by `delta_n4_count`). -/
   countDerives : formationTuple_Fq.2.2.2 = formationTuple_Q.2.2.2 + 1

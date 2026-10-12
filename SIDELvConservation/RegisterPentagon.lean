@@ -10,8 +10,10 @@ import Mathlib.Data.Nat.Prime.Basic
 STRUCTURE of the monograph's §27.3 claim — "one premise in five registers … a reader who
 discharges any one of them discharges all five" — as five Prop-level *faces* arranged
 around the one goal state.  It does **not** compile the equivalences between registers
-(that would encode the RH-equivalence — the W-2 trap).  Every face states its register's
-CONTENT; none is a `Bool`/`True` stub or a name that asserts a conclusion.
+(that would encode the RH-equivalence — the W-2 trap).  This module compiles five Prop-level faces around the one goal state (R5's output face is true as stated and so
+carries no Hilbert-Polya content; R1's face is refuted at SIDE-kernel v1.3 by distinguishing_not_universal), the P2
+edges goal <= h1 and h2, R2 -> RH and R4 -> RH (one direction, Li's criterion as a named premise), R1 -> goal and
+R5-output -> RH as premise-carrying implications; it does not compile the equivalences between registers.
 
 The goal state (the pentagon's centre) is the T3 bridge target, restated verbatim from
 `SIDELvConservation/PinnedGoal.lean:17-19` and `T3_StepNineBridge.lean:97` at v0.6.0:
@@ -32,7 +34,7 @@ eye-verifiable at both pins.
 - **R1** `Register1_universalityHypothesis` restates the load-bearing hypothesis of
   `SilenceTheorem.silence_universal` from **SIDE-kernel v1.3 = 0bc21c0**
   (`Kernel/SilenceTheorem.lean`: `ConfigurationSpace` 26-28, `Interface` 33-37,
-  `Interface.is_universal` 42-44).  Definitional identity: eye-verifiable.
+  `Interface.is_universal` 42-44).
 
 ## The edges — STATEMENT-ONLY this sitting (three explicit lists; P2+ discharges DERIVES)
 
@@ -65,8 +67,7 @@ eye-verifiable at both pins.
 ## Sorry census
 
 This module adds **no** `sorry`.  All faces are Prop definitions; all edges are documented
-above (statement-only).  The repo census stays exactly two intended sites
-(`T3_StepNineBridge.lean:108`, `PinnedGoal.lean:23`).
+above (statement-only).
 -/
 
 namespace SIDELvConservation
@@ -100,9 +101,9 @@ the interface acts identically across all configurations. -/
 def Interface.is_universal {C : ConfigurationSpace} {R : Type} (I : Interface C R) : Prop :=
   ∀ c₁ c₂ : C.α, I.action c₁ = I.action c₂
 
-/-- **R1 face — the universality hypothesis.**  The load-bearing premise of
-`SilenceTheorem.silence_universal` (SIDE-kernel v1.3): every essential interface is
-universal.  Removing it leaves `silence_universal` with an unsolved goal (Ch. 14). -/
+/-- **R1 face — the universality hypothesis.**  every essential interface is universal; silence_universal (SIDE-kernel v1.3) takes the per-interface premise
+I.is_universal, and this quantified form is refuted at that pin by distinguishing_not_universal (an essential,
+non-universal interface).  Removing it leaves `silence_universal` with an unsolved goal (Ch. 14). -/
 def Register1_universalityHypothesis : Prop :=
   ∀ (C : ConfigurationSpace) (R : Type) (I : Interface C R), I.essential → I.is_universal
 
@@ -165,18 +166,15 @@ trace of a real, non-negative spectrum.  Native and CERTIFIED (`C5_input`, disch
 `C5_input_at_Phi`).  Restated as the pentagon's R5-input face by definitional identity. -/
 def Register5_input : T3.Coupling := C5_input
 
-/-- **R5 output face — the compiled SCHEMA of the Hilbert–Pólya realization.**  Content:
-there is an OPERATOR (matrix form `T : ℕ → ℕ → ℝ`), self-adjoint with respect to a
-POSITIVE-DEFINITE symmetric pairing, whose diagonal spectrum realizes every nontrivial
-ζ-zero.  **DISCLAIMED** — this programme explicitly disclaims asserting it; it closes over
+/-- **R5 output face — the compiled SCHEMA of the Hilbert–Pólya realization.**  R5 output face -- a schema of the Hilbert-Polya shape: a positive-diagonal symmetric pairing, a T self-adjoint for it,
+and a diagonal spectrum containing every nontrivial zeta-zero's real part; as stated it is true (SIDE-explicit-formula
+register5_output_holds: pairing 1, a diagonal enumeration of the countable real parts), so it carries no Hilbert-Polya
+content; the ordinates and a genuine self-adjoint operator are what it lacks.  **DISCLAIMED** — this programme explicitly disclaims asserting it; it closes over
 𝔽_q (Weil 1948, Castelnuovo / intersection-pairing positivity), is open over ℚ.
 
 Repaired from the P1 draft (reviewer screen): the earlier `0 ≤ pairing i i` + bare-spectrum
 form was classically trivially true (witness `pairing ≡ 0`, choice-enumerate the countably
-many zeros — no operator content).  Now the pairing is **positive-definite** (`0 < pairing i i`,
-strict) so the zero-pairing witness dies, and an actual **operator** `T` self-adjoint w.r.t.
-the pairing (`pairing i i * T i j = pairing j j * T j i`) with the spectrum on its diagonal is
-required, so a bare spectrum-enumeration no longer witnesses.  This is the SCHEMA of
+many zeros — no operator content).  This is the SCHEMA of
 Hilbert–Pólya only: the analytic content — genuine self-adjointness on a Hilbert space and
 the trace identification that would make it RH-equivalent — is the C₅ distance,
 manuscript-resident (trail O.18), **DISCLAIMED as ever**.  (A diagonal multiplication operator
@@ -277,8 +275,8 @@ theorem R1_universality_to_goal
     (h : Register1_universalityHypothesis) : GoalState 𝒞 s :=
   universalityBridge h
 
-/-- **INTERFACES — R5-output → RiemannHypothesis**, **DISCLAIMED**.  Named premise: the
-Hilbert–Pólya realization bridge.  This programme asserts NEITHER `Register5_output_HilbertPolya`
+/-- ENCODES -- R5-output -> RiemannHypothesis, DISCLAIMED: Register5_output_HilbertPolya is true as stated, so the premise
+hpBridge carries RiemannHypothesis itself; the edge records the disclaimed register's shape only.  This programme asserts NEITHER `Register5_output_HilbertPolya`
 NOR this bridge; the edge is stated only so the disclaimed register's shape is on the record.
 Closes over 𝔽_q (Weil 1948), open over ℚ — cited, never claimed. -/
 theorem R5_output_HilbertPolya_to_RH
@@ -288,8 +286,9 @@ theorem R5_output_HilbertPolya_to_RH
 
 /-! ### The C₅-distance compiled marker (W-6-EXT h2 candidate #4, 2026-07-19)
 
-The fifth register's boundary, made compiled: the CERTIFIED R5-input spectrum `{n²}` provably
-CANNOT witness the (disclaimed) R5-output realization face. -/
+The fifth register's boundary, made compiled under a named premise: given a nontrivial zeta-zero in the open strip
+(NontrivialZeroExistsInStrip), the certified R5-input spectrum {n^2} cannot witness the (disclaimed) R5-output
+realization face. -/
 
 /-- The certified R5-input spectrum `μ n = n²` (`CouplingsAtPhi.C5_input`, discharged at
 `C5_input_at_Phi` via Mathlib's `hasSum_int_evenKernel`), presented as the ℕ-indexed real
