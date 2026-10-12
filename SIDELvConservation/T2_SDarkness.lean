@@ -11,14 +11,8 @@ and the kernel `t ^ (s - 1)`.  No third input.  Consequences:
 
 * **Congruence.**  `Φ₁ = Φ₂` on `Ioi 0` ⇒ `mellin Φ₁ s = mellin Φ₂ s` for
   every `s`.  This is the trivial half.
-* **Exhaustion.**  Any predicate on `Φ` alone — in particular any
-  constraint the product formula imposes on `Φ` — factors through `Φ`,
-  hence is s-independent.  This is the substantive half.
-
-Joined with T1: constraints on the pre-image `Phi` of the Mellin
-factorization cannot select among values of `s`.  T3 will use exactly
-this to reject the "combinations of classes could produce s-side effects"
-alternative.
+* **Exhaustion.**  T2 names Mathlib's mellin definition: mellin Phi s is the Ioi 0 integral of Phi against t^(s-1) (T2b, by rfl), and
+equal integrands give equal transforms at every s (T2a, T2a', T2c);  **T3 main — step-(9) bridge, stated, not proved; open.**
 -/
 
 namespace SIDELvConservation
