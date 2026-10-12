@@ -35,8 +35,7 @@ def Register4_channelInequality_upTo (lam_A lam_Z : ℕ → ℝ) (N : ℕ) : Pro
 structure PartialChannelInequality (lam_A lam_Z : ℕ → ℝ) (N : ℕ) : Prop where
   coverage : Register4_channelInequality_upTo lam_A lam_Z N
 
-/-- **The grading is monotone** — a wider coverage implies every narrower one. This is what makes the
-partial inhabitants a *graded* family: `N` orders them, more coverage strictly stronger. -/
+/-- **The grading is monotone** — a wider coverage implies every narrower one. This is what makes the partial inhabitants a graded family: N orders them, more coverage at least as strong. -/
 theorem partial_mono {lam_A lam_Z : ℕ → ℝ} {N M : ℕ} (hMN : M ≤ N)
     (h : PartialChannelInequality lam_A lam_Z N) :
     PartialChannelInequality lam_A lam_Z M :=
@@ -79,12 +78,9 @@ theorem certifiedPartialInhabitant
 further — the Voros detection threshold, verbatim from the deposited certificate. -/
 theorem coverage_boundary_exact (T : ℝ) : N₀ T = ⌊2 * T ^ 2⌋₊ := rfl
 
-/-- **Barrier-anchor (Program Four (i)(b)): the detection threshold is quadratic — exponent exactly 2.**
-`N₀(T)` sits in `(2·T² − 1, 2·T²]`: the exponent of `T` in the threshold is 2, pinned in the compiled
-certificate — not 1, not tunable. This is the compilable core of the threshold-rigidity barrier (the
-`2` is the `γ²` of `|ρ|²`, functional-equation-forced; a mollifier acting on the ζ-integral side does
-not touch this kernel exponent). It explains why the finite-range certificate cannot be extended by
-mollification — a barrier, not a crossing. -/
+/-- **The detection threshold, as defined, is quadratic. N₀(T) = ⌊2·T²⌋ sits in (2·T² − 1, 2·T²]; the exponent 2 is the
+one fixed in N₀'s definition (the Voros threshold, cited). The barrier reading that mollification cannot move it is
+argument, not compiled.** -/
 theorem detection_threshold_quadratic (T : ℝ) :
     2 * T ^ 2 - 1 < (N₀ T : ℝ) ∧ (N₀ T : ℝ) ≤ 2 * T ^ 2 := by
   have hx : (0 : ℝ) ≤ 2 * T ^ 2 := by positivity
@@ -95,38 +91,23 @@ theorem detection_threshold_quadratic (T : ℝ) :
   linarith
 
 /-- **Barrier extension (Program Four (i)(b) / frontier 2(a)): the detection threshold is monotone in
-the zero height.** For `0 ≤ T₁ ≤ T₂`, `N₀ T₁ ≤ N₀ T₂`. Consequence: the threshold is pinned by the
-zero height `T` alone, so **no weighting that preserves the zero locations can lower it** — every
-mollifier of the ζ-integral (Levinson / Conrey / Soundararajan class) preserves the zeros, hence the
-threshold; lowering it would require *moving the zeros*, which no such weighting does. The only
-weighting that reaches the centre is a *zero-side* test function (Weil functional) — but that is the
-positive pairing itself (Hilbert–Pólya, the realization wall), not a mollifier. So the barrier holds
-for the mollifier class; the sole exception is the known pairing frontier. -/
+the zero height.** For `0 ≤ T₁ ≤ T₂`, `N₀ T₁ ≤ N₀ T₂`. The reading that no zero-preserving weighting (mollifier) can lower it is argument, not compiled. -/
 theorem detection_threshold_mono {T₁ T₂ : ℝ} (h0 : 0 ≤ T₁) (h : T₁ ≤ T₂) : N₀ T₁ ≤ N₀ T₂ := by
   rw [coverage_boundary_exact, coverage_boundary_exact]
   apply Nat.floor_mono
   have hsq : T₁ ^ 2 ≤ T₂ ^ 2 := by nlinarith
   linarith
 
-/-! ## Item 1 (W-SIGN-6) — the conjunction as theorem: the residue is irreducible by structure
-
-Formalizes W-SIGN-6's result: *each clause individually free; the conjunction is RH.* The theorem
-bundles three **compiled** facts and lets their juxtaposition state the irreducibility — it derives
-the structure, it does not define "conjunction = RH". The E-Difficulty programme's first real
+/-! ## Item 1 (W-SIGN-6) — three facts juxtaposed. The theorem bundles, under named premises, three facts (the {n²}
+spectrum does not realize the zeros; the channel inequality holds to N₀(T); a ZeroActingPairing yields RH through two
+named premises) and offers their juxtaposition as W-SIGN-6's reading that the difficulty sits at the conjunction; that
+neither clause alone yields RH is not compiled.* The E-Difficulty programme's first real
 instance: the difficulty is located at the conjunction, not at either clause. -/
 
-/-- **The residue is irreducible by structure.** Neither clause of `ZeroActingPairing` alone yields RH:
-* **clause 1 is free** — a positive self-adjoint operator with a discrete spectrum exists (the certified
-  `{n²}` input, `positivity_free_obstruction_is_zeroRealization`) that does **not** realize the ζ-zeros
-  (first conjunct here);
-* **clause 2 is free** — the finite-range inequality holds to the fixed threshold `N₀(T)` (the certified
-  partial inhabitant, second conjunct) and does not reach all `n`;
-* **only the conjunction implies RH** — the full `ZeroActingPairing`, both clauses jointly over the
-  ζ-zeros, gives RH through the named classical premises (the Weil direction `inequalityToPositivity`;
-  Li's criterion `liCriterion`) — third conjunct.
-So the difficulty is exactly the conjunction. Derives from the compiled pieces (C-3, A2,
-`zeroActingPairing_to_RH`); the equivalence is not encoded — the `⟹ RH` is the compiled conditional,
-the freeness are witnessed facts. -/
+/-- **The residue is irreducible by structure.** **Three facts juxtaposed. Under NontrivialZeroExistsInStrip (OPEN), the three finite-range premises and the
+decomposition, and the named premises inequalityToPositivity and liCriterion: the certified {n²} spectrum does not
+realize the zeros; the channel inequality holds to N₀(T); and any ZeroActingPairing gives RH. That neither clause
+alone yields RH is the reading, not compiled. -/
 theorem residue_irreducible
     {lam_A lam_Z lam : ℕ → ℝ} {low : Finset NontrivialZero} {tail : ℕ → ℝ} {T : ℝ}
     (hZero : NontrivialZeroExistsInStrip)
