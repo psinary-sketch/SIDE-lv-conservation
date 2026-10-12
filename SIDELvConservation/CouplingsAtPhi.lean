@@ -9,7 +9,9 @@ step under two hypotheses:
   h2 : mellin Phi (s / 2) ≠ 0  -- that witness has non-vanishing Mellin factor at s
 
 This file states the seven classes of monograph Ch. 15 §15.2 as `Coupling` predicates and
-discharges those it can against Mathlib. It is the h1 half of the obligation, in progress.
+discharges those it can against Mathlib. EIGHT discharges stand at the fixed witness Φ: C₁, C₂, C₃, C₄ (S-law and τ+2 translation, i.e. the theta group's
+generators), C₅-input, C₆, C₇-entirety, C₇-order, assembled in `h1_complete_at_Phi`; `C5_output` as defined is implied
+by `C5_input` and does not encode Hilbert–Pólya.
 
 STATUS AT THIS COMMIT (honest; see the per-class comments):
   C₁ realness                       PROVED   (`C1_realness_at_Phi`)
@@ -22,8 +24,6 @@ STATUS AT THIS COMMIT (honest; see the per-class comments):
   C₅-INPUT  heat trace of a real, non-negative spectrum   PROVED (`C5_input_at_Phi`, μ n = n²,
                                               via Mathlib's `hasSum_int_evenKernel`)
   C₅-OUTPUT the spectral realisation (Hilbert–Pólya)      STATED, DISCLAIMED, NEVER CLAIMED.
-                                              The gap between C₅-input and C₅-output is the
-                                              premise's FIFTH REGISTER — see `C5_output`.
   C₆ holomorphic extension          PROVED   (`C6_holomorphic_extension_at_Phi`, via Mathlib's
                                               `differentiableAt_jacobiTheta₂_snd`)
   C₇-ENTIRETY entire completion of the Mellin transform  PROVED (`C7_entirety_at_Phi`, via
@@ -33,11 +33,6 @@ STATUS AT THIS COMMIT (honest; see the per-class comments):
                                               representation `Λ₀ = ½·mellin f_modif(s/2)` through the
                                               even theta kernel, whose exponential decay IS in
                                               Mathlib — no complex Stirling, no Phragmén–Lindelöf.
-
-SEVEN discharges now stand at the fixed witness Φ: C₁, C₂, C₃, C₅-input, C₆, C₇-entirety, C₇-order.
-The h1 obligation of `T3prime_shared_witness` stands at everything-but-C₄: `sevenClasses` carries
-`C7_order` (PROVED, W-8, its real content — not the entirety half), and C₄ (modularity) is the only
-class still unattempted.
 
 NOTHING HERE IS A SHELL. Every predicate below is a statement that could be false: no `True`-valued
 coupling, no `fun _ => True`, no hypothesis that is its own conclusion. Where a proof is not
@@ -80,19 +75,15 @@ def C3_theta_transformation : Coupling := fun (Φ : ℝ → ℂ) =>
   ∀ t : ℝ, 0 < t → Φ (1 / t) = Real.sqrt t * Φ t + (Real.sqrt t - 1) / 2
 
 /-- **C₄ (modular / PSL₂(ℤ)) — STRENGTHENED** (2026-07-17, C₄ Fork B; W-7-style def change).
-`Φ` is the real-ray restriction of a holomorphic function `F` on the upper half-plane that is
-covariant under the two generators of `PSL₂(ℤ) = ⟨S, T | S² = (ST)³ = I⟩`:
+`Φ` is the real-ray restriction of a holomorphic function `F` on ℍ covariant under `S` (τ ↦ −1/τ, weight ½ in the
+library's branch) and `T²` (τ ↦ τ + 2), the generators of the theta group Γ_θ (not under PSL₂(ℤ)'s `T`).
 
   (i)   `F` holomorphic on `ℍ` (`0 < im τ`);
   (ii)  ray restriction: `F (I·t) = 2·Φ t + 1` for `t > 0`  — via `evenKernel_def`, `2Φ+1 = evenKernel 0`;
   (iii) **T-law**: `F (2 + τ) = F τ`  — a GENUINELY NEW fact, *not* implied by C₃; C₃ is only the
         S-law's real-ray shadow, and the modular translation lives in the upper-half-plane variable τ
         (`jacobiTheta(2+τ) = jacobiTheta τ`), not as the real-`t` identity `Φ(t+2)=Φ(t)`;
-  (iv)  **S-law**, in the library's exact branch form: `F (-1/τ) = (-I·τ)^(1/2) · F τ` on `ℍ`.
-
-Together the four clauses state *"Φ is the ray-restriction of a holomorphic PSL₂(ℤ)-generator-covariant
-function"* — the modular STRUCTURE that Chapter 15 §15.3's per-class argument consumes, at the kernel's
-share of the two-leg split. The spectral MATHEMATICS the manuscript's C₄ rests on (the Eisenstein/Maass
+  (iv)  **S-law**, in the library's exact branch form: `F (-1/τ) = (-I·τ)^(1/2) · F τ` on `ℍ`. The spectral MATHEMATICS the manuscript's C₄ rests on (the Eisenstein/Maass
 decomposition of `L²(PSL₂(ℤ)\ℍ)`, both spectra confined to `σ = ½`, Selberg) is the **manuscript leg**,
 cited there, not re-formalized here (that would be Fork C — half-integral-weight modular forms as a
 typeclass, absent from Mathlib at the pin, and not the kernel's share).
@@ -121,18 +112,11 @@ def C5_input : Coupling := fun (Φ : ℝ → ℂ) =>
   ∃ μ : ℤ → ℝ, (∀ n : ℤ, 0 ≤ μ n) ∧
     ∀ t : ℝ, 0 < t → HasSum (fun n : ℤ => ((Real.exp (-Real.pi * μ n * t) : ℝ) : ℂ)) (2 * Φ t + 1)
 
-/-- **C₅-OUTPUT (the spectral realisation — DISCLAIMED, never claimed).**  That the spectrum of
-C₅-input is the spectrum *of a self-adjoint operator whose eigenvalues are the zeta zeros* — the
-Hilbert–Pólya assertion.  **This programme explicitly DISCLAIMS it** (EXCLUSION_ENGINE, Misreadings:
+/-- **C₅-OUTPUT (the spectral realisation — DISCLAIMED, never claimed).**  C₅-OUTPUT as defined here: C₅-input's spectrum together with, for each n, some ρ on re ρ = ½ with (im ρ)² = μ n — a
+condition C₅-input already implies (ρ = ½ + i√(μ n)); it does not encode the Hilbert–Pólya realisation, which remains
+disclaimed and unformalised.  **This programme explicitly DISCLAIMS it** (EXCLUSION_ENGINE, Misreadings:
 the spectral kernels disclaim Hilbert–Pólya rather than rest on it), and NO theorem in this file
-claims it at `Phi` or anywhere else.
-
-It is stated only so that the gap between input and output has a name.  **That gap is the premise's
-FIFTH REGISTER** (BALANCE_AND_POSITIVITY §IV lists four; this is the fifth): over `𝔽_q` the input's
-positivity and the output's coincide — Weil's 1948 proof supplies the operator-side positivity from
-the Hodge-index/Castelnuovo inequality on `C × C` — while over `ℚ` the coincidence is exactly what
-is missing.  The formation distance between `C5_input` and `C5_output` IS the premise, in spectral
-coordinates.  See BALANCE_AND_POSITIVITY, "The function-field face at the fixed witness". -/
+claims it at `Phi` or anywhere else.  See BALANCE_AND_POSITIVITY, "The function-field face at the fixed witness". -/
 def C5_output : Coupling := fun (Φ : ℝ → ℂ) =>
   ∃ (H : Type) (_ : ∀ _ : H, ℝ), ∃ μ : ℤ → ℝ, (∀ n : ℤ, 0 ≤ μ n) ∧
     (∀ t : ℝ, 0 < t → HasSum (fun n : ℤ => ((Real.exp (-Real.pi * μ n * t) : ℝ) : ℂ)) (2 * Φ t + 1)) ∧
@@ -155,7 +139,9 @@ def C7_entirety : Coupling := fun (Φ : ℝ → ℂ) =>
   ∃ G : ℂ → ℂ, Differentiable ℂ G ∧
     ∀ s : ℂ, 1 < s.re → G s = mellin Φ (s / 2) + 1 / s + 1 / (1 - s)
 
-/-- **C₇-ORDER (Hadamard, the open half).**  That entire completion has **order ≤ 1** — the
+/-- **C₇-ORDER (Hadamard). That entire completion has order ≤ 1 in the maximal-type form `‖G s‖ ≤ C · exp (A · ‖s‖ · log
+(‖s‖ + 2))` — PROVED at `Phi` (`C7_order_at_Phi`, W-8 theta-Mellin route); the finite-type form it replaced is refuted
+(`C7_finite_type_false`).**  That entire completion has **order ≤ 1** — the
 maximal-type growth `‖G s‖ ≤ C · exp (A · ‖s‖ · log (‖s‖ + 2))`.  This is the actual growth of the
 completed zeta (the Γ factor forces `exp(½‖s‖ log‖s‖)` on the real axis), it implies order ≤ 1, and
 it is exactly the hypothesis the **genus-1** Hadamard factorisation consumes — the one that bounds
@@ -168,17 +154,7 @@ type**, and it is **provably false** of the forced witness `G = completedRiemann
 positive real axis `‖G σ‖ ~ exp(½ σ log σ)` (the Γ factor), which beats `C · exp(A σ)` for *every*
 fixed `A`; (ii) `G` carries the nontrivial zeros of ζ, `n(T) ~ (T/2π) log T` — superlinear — so by
 Jensen it cannot be of finite exponential type.  **Genus-1 Hadamard consumes order ≤ 1, not finite
-type.**  The statement is corrected to the true order form, which complex Stirling delivers directly.
-
-OPEN, and priced honestly.  Its true cost is two classical ingredients, **neither of which is in
-Mathlib at this pin**:
-  (1) **Stirling control of the Γ factor** — a bound `‖Γ(s/2)‖ ≤ exp (A‖s‖ log‖s‖)`-type estimate.
-      Mathlib has no `Gamma/Stirling` file and no norm bound on `Complex.Gamma` at all.
-  (2) **Finite order of ζ in the strip** — polynomial growth of `ζ` on vertical lines, then
-      Phragmén–Lindelöf to fill the strip.  Mathlib HAS `PhragmenLindelof.vertical_strip`, but that
-      is a *maximum principle*: it converts growth control into boundedness.  It cannot supply (1),
-      and it cannot manufacture an order bound from entirety.
-Formalising C₇-order is therefore a Γ-asymptotics project, not a corollary of what exists. -/
+type.**  The statement is corrected to the true order form, which complex Stirling delivers directly. -/
 def C7_order : Coupling := fun (Φ : ℝ → ℂ) =>
   ∃ G : ℂ → ℂ, Differentiable ℂ G ∧
     (∀ s : ℂ, 1 < s.re → G s = mellin Φ (s / 2) + 1 / s + 1 / (1 - s)) ∧
@@ -256,9 +232,8 @@ theorem C3_theta_transformation_at_Phi : C3_theta_transformation Phi := by
 /-- **C₅-INPUT at Φ — PROVED.**  The spectrum is `μ n = n²` — real, non-negative — and Mathlib's
 `hasSum_int_evenKernel` says exactly that its heat trace is the kernel:
 `∑_{n : ℤ} exp (-π n² t) = evenKernel 0 t = 2 · Phi t + 1`.  The SPECTRAL INPUT is therefore
-certified at the fixed witness.  (The spectral OUTPUT — that this spectrum is a self-adjoint
-operator's, with the zeros as eigenvalues — is `C5_output`, and is NOT claimed: see its docstring.
-The distance between the two is the premise's fifth register.) -/
+certified at the fixed witness.  (The Hilbert–Pólya realisation is disclaimed and not formalised; `C5_output` as defined is implied by this input and
+does not express it.) -/
 theorem C5_input_at_Phi : C5_input Phi := by
   refine ⟨fun n : ℤ => (n : ℝ) ^ 2, fun n => sq_nonneg _, ?_⟩
   intro t ht
@@ -306,8 +281,8 @@ theorem C7_order_at_Phi : C7_order Phi := by
   have hm := completedRiemannZeta_eq_mellinPhi s hs
   rw [← hm, h]; ring
 
-/-- **C₄ discharged at Φ** (Fork B, sitting B2, 2026-07-17).  `Φ` is the real-ray restriction of
-`jacobiTheta`, holomorphic on ℍ and covariant under the two PSL₂(ℤ) generators. Clauses discharged by
+/-- **C₄ discharged at Φ** (Fork B, sitting B2, 2026-07-17).  `Φ` is the real-ray restriction of `jacobiTheta`, holomorphic on ℍ and covariant under `S` and `T²` (τ ↦ τ + 2), the
+generators of the theta group. Clauses discharged by
 Mathlib: (i) `differentiableAt_jacobiTheta`; (ii) the ray bridge `2Φ + 1 = evenKernel 0 = jacobiTheta(I·t)`
 (`evenKernel_def` at `a = 0`, `jacobiTheta_eq_jacobiTheta₂`); (iii) the T-law `jacobiTheta_two_add`;
 (iv) the S-law `jacobiTheta_S_smul` (upper-half-plane, via the `⟨τ, hτ⟩` coercion). Discharges the
@@ -330,11 +305,8 @@ theorem C4_modularity_at_Phi : C4_modularity Phi := by
 /-! ## What C₅-output is, and is not (C₄ is now discharged — Fork B, B2)
 
 `C4_modularity` is **discharged** at `Phi` above (`C4_modularity_at_Phi`, Fork B, 2026-07-17); its
-former STATED-ONLY status (the under-strength `C₃`-in-a-wrapper form) is retired.  What remains
-STATED-ONLY is **C₅-OUTPUT** (`C5_output`): the *specific* spectral realisation (Hilbert–Pólya), which
-the programme explicitly does NOT claim (EXCLUSION_ENGINE Misreadings: the spectral kernels disclaim
-Hilbert–Pólya rather than rest on it).  Writing `C5_output Phi` as a theorem would be an overclaim.
-`C5_input` *is* discharged (`C5_input_at_Phi`); the input↔output distance is the premise's fifth register.
+former STATED-ONLY status (the under-strength `C₃`-in-a-wrapper form) is retired.  The Hilbert–Pólya realisation is disclaimed and is not formalised; the definition `C5_output` as written is implied by
+`C5_input` and so does not state it.
 -/
 
 /-! ## The n = 1 binding instance of the channel inequality
@@ -353,12 +325,10 @@ That is a true inequality but it is NOT the n = 1 instance: its slack is 1.2006�
 n = 1 instance has slack exactly `2 λ₁ = 0.046191…`.  The correct constants form is `γ + 2 ≥
 log (4π)`, verified against the bench to 15 digits.  It is stated below.
 
-WHY IT IS NOT PROVED HERE.  It needs `γ ≥ log (4π) - 2 = 0.53102…`.  Mathlib's available bounds
+PROVED HERE (`n_one_binding_instance`): `γ + 2 ≥ log (4π)`, through `γ > eulerMascheroniSeq 12 = 86021/27720 − log 13`
+and explicit bounds on `exp 5` and `π`.  It needs `γ ≥ log (4π) - 2 = 0.53102…`.  Mathlib's available bounds
 are `one_half_lt_eulerMascheroniConstant : 1/2 < γ` and `eulerMascheroniConstant_lt_two_thirds`,
-and `1/2 < γ` is NOT sharp enough (0.5 < 0.53102).  A sharper lower bound is derivable from
-`eulerMascheroniSeq_lt_eulerMascheroniConstant` plus numeric bounds on `log`, but that is a
-numeric-analysis exercise, not a transport of the premise, and it is left as its own obligation
-rather than asserted. -/
+and `1/2 < γ` is NOT sharp enough (0.5 < 0.53102). -/
 theorem n_one_binding_instance :
     Real.eulerMascheroniConstant + 2 ≥ Real.log (4 * Real.pi) := by
   -- γ > eulerMascheroniSeq 12 = harmonic 12 − log 13, with harmonic 12 = 86021/27720.
@@ -402,18 +372,18 @@ All eight coupling facts are discharged at the single fixed witness
   1. `C1_realness`               — realness on the positive real axis;
   2. `C2_halfplane_nonvanishing` — Mellin-transform nonvanishing on the half-plane;
   3. `C3_theta_transformation`   — the Jacobi/theta functional-equation symmetry;
-  4. `C4_modularity`             — the **strengthened** PSL₂(ℤ) modularity of the
-                                    ℍ-lift (S-inversion + T-translation laws), Fork B,
-                                    witnessed by `jacobiTheta`;
+  4. `C4_modularity` — the strengthened modular law of the ℍ-lift under `S` and `T²` (τ ↦ τ + 2), the theta group's
+  generators, witnessed by `jacobiTheta`;
   5. `C5_input`                  — the spectral heat-trace INPUT register;
-  6. `C6_holomorphic_extension`  — holomorphy of the completed object;
+  6. `C6_holomorphic_extension` — holomorphic extension of Φ to `re z > 0`.
   7. `C7_entirety`               — entirety (order-side, whole-plane);
   8. `C7_order`                  — the order ≤ 1 maximal-type growth bound.
 
 Ledger note.  C₅-**OUTPUT** (the Hilbert–Pólya spectral realization) is DISCLAIMED
 and lies OUTSIDE this count — it is the cited fifth-register premise, not a coupling
-proven here.  This theorem is the `h1` leg of the T3′ bracket; `h2` (nonvanishing of
-the Mellin transform at the operative point) remains the outstanding obligation.
+proven here.  This theorem is the `h1` leg of the T3′ bracket; its `h2` leg -- nonvanishing of the Mellin transform at the operative
+point, this kernel’s register and not the Prop the programme’s glossary names h2, which is `h2_sign`, Weil positivity
+on classK (SIDE-explicit-formula `SIDEExplicitFormula/H2Sign.lean` :28-:29) -- remains outstanding.
 Each conjunct's own `#print axioms` is `{propext, Classical.choice, Quot.sound}`. -/
 theorem h1_complete_at_Phi :
     C1_realness Phi ∧ C2_halfplane_nonvanishing Phi ∧ C3_theta_transformation Phi ∧
