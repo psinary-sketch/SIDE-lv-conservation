@@ -16,8 +16,9 @@ The a-independent assembly (`Gamma_le_exp`, `exp_arg_bound`, `reflect_arith`, `i
 transports verbatim; only the domination and `f_modif`-norm bricks need parameterizing over `a`, and
 for `a ≠ 0` the FE-pair is not self-dual (it couples `evenKernel a` with `cosKernel a`).
 
-**This module (sitting one of the proof):** the a-general exponential-domination bricks — the
-foundation of the per-`a` bound. Both `evenKernel a` and `cosKernel a` decay exponentially at `∞`
+**This module:** the full splice — a-general domination bricks, per-`a` even and odd Hurwitz half-bounds, the
+reduction to `completedLFunction`, the whole-plane even and odd bounds, and the terminal
+`exists_norm_completedLFunction_le_exp` for every non-trivial Dirichlet character. Both `evenKernel a` and `cosKernel a` decay exponentially at `∞`
 (Mathlib's `isBigO_atTop_*_sub`) and are continuous on `Ioi 0`, so the big-O tail + compact seam gives
 a clean envelope `≤ C · e^{-p t}` on `[1, ∞)` for each.
 -/
