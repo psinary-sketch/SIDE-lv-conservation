@@ -74,38 +74,21 @@ theorem T3b_joint_witness_gives_combinations_exclude
     CombinationsExclude 𝒞 s :=
   ⟨Φ, hJoint, hNonzero⟩
 
-/-- **T3 main — step-(9) bridge.**  Per-class exclusion at `s`
-⟹ combined exclusion at `s`.
-
-Manuscript reading: because the couplings contribute only to `Φ` and
-`s` enters only through the kernel `t ^ (s / 2 - 1)` in `mellin Φ`,
-combinations of couplings cannot manufacture an s-side effect (a forced
-zero at `s`) that no single coupling can.
+/-- **T3 main — step-(9) bridge, stated, not proved; open.**  For a family
+`𝒞` and a point `s`: per-class exclusion at `s` ⟹ combined exclusion at `s`,
+as a `Prop`.
 
 Formal reading: the hypothesis is
 `∀ C ∈ 𝒞, ∃ Φ_C, C Φ_C ∧ mellin Φ_C (s / 2) ≠ 0`,
 and the conclusion asks for a *single* `Φ` witnessing every `C ∈ 𝒞`
-simultaneously with `mellin Φ (s / 2) ≠ 0`.  This is a `∀∃ ⟹ ∃∀`
-commutation that has no free witness — the emergent-totality gap of
-FINDINGS F.2026-07-09-b.
--/
-theorem T3_perClass_to_combinations
-    (𝒞 : Set Coupling) (s : ℂ)
-    (h : ∀ C ∈ 𝒞, PerClassExcludes C s) :
-    CombinationsExclude 𝒞 s := by
-  -- Unfold `CombinationsExclude` so the pinned goal is exact.
-  show ∃ Φ : ℝ → ℂ, (∀ C ∈ 𝒞, C Φ) ∧ mellin Φ (s / 2) ≠ 0
-  -- The hypothesis `h` gives, for each `C ∈ 𝒞`, a witness `Φ_C` with
-  -- `C Φ_C ∧ mellin Φ_C (s/2) ≠ 0`.  A choice function
-  --   `f : {C // C ∈ 𝒞} → ℝ → ℂ`
-  -- extracting these witnesses exists (classically), but there is in
-  -- general no `Φ` satisfying every `C ∈ 𝒞` simultaneously; the
-  -- family `{Φ_C}` need not have a common intersection point in
-  -- `Φ`-space.  This is the ∀∃ ⟹ ∃∀ swap, and it is precisely the
-  -- content of FINDINGS F.2026-07-09-b (emergent-totality question).
-  -- STOP per work-order T3 rules — one `sorry`, no weakened statement,
-  -- no `native_decide`, no new axiom.
-  sorry -- F.2026-07-09-b: ∀∃ ⟹ ∃∀ needs a joint-witness / cofinality assumption
+simultaneously with `mellin Φ (s / 2) ≠ 0` — a `∀∃ ⟹ ∃∀` commutation with
+no free witness (FINDINGS F.2026-07-09-b).  Its universal form is refuted in
+this file by `T3doubleprime_general_commutation_fails`; it holds under
+Determination's shared witness by `T3prime_shared_witness`.  Restated at b648
+under the author's ruling (R258)(2) from a `theorem` closed by `sorry`; that
+history is in this file's git log. -/
+def T3_perClass_to_combinations (𝒞 : Set Coupling) (s : ℂ) : Prop :=
+  (∀ C ∈ 𝒞, PerClassExcludes C s) → CombinationsExclude 𝒞 s
 
 /-- **T3′ — the bridge closes under Determination's shared witness.**
 If the programme's Determination condition is in force, every coupling
