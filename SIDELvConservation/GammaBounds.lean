@@ -4,8 +4,9 @@ import Mathlib.NumberTheory.LSeries.RiemannZeta
 /-!
 # Vertical-line norm bounds for the Hadamard input of the completed zeta
 
-Norm (absolute-value) bounds for the factors of the completed Riemann zeta function on vertical
-lines, feeding the Hadamard order-`≤ 1` input `C7_order` (see `SIDELvConservation.CouplingsAtPhi`).
+Norm bounds for the factors of the completed Riemann zeta function on vertical lines; of these,
+`Real.Gamma_le_two_mul_rpow` feeds the C₇-order discharge (via `Gamma_le_exp`), while the vertical-line and edge
+bounds are standalone (the Phragmén–Lindelöf route they served was retired).
 The Γ factor is the one piece absent from Mathlib at this pin; everything here is classical and of
 general use.
 
@@ -70,7 +71,8 @@ theorem norm_riemannZeta_le_tsum {s : ℂ} (hs : 1 < s.re) :
 satisfies the explicit bound `‖Λ₀ s‖ ≤ π⁻¹ · (∑' n, 1 / n ^ 2) + 3/2` there. Since
 `∑' n, 1 / n ^ 2 = ζ 2 = π ^ 2 / 6`, the constant is `π/6 + 3/2 ≈ 2.02`.
 
-This is the right-edge datum consumed by `PhragmenLindelof.vertical_strip`. On `re s = 2` each factor
+This is a right-edge datum of the shape `PhragmenLindelof.vertical_strip` would consume; no declaration in the kernel
+consumes it (the C₇-order discharge took the theta-Mellin route). On `re s = 2` each factor
 of `Λ = π ^ (-s/2) · Γ(s/2) · ζ s` is controlled: `‖π ^ (-s/2)‖ = π⁻¹`, `‖Γ(s/2)‖ ≤ Γ 1 = 1`
 (`norm_Gamma_le_Gamma_re`, `re (s/2) = 1`), and `‖ζ s‖ ≤ ∑' n, 1 / n ^ 2` (`norm_riemannZeta_le_tsum`).
 The correction terms of `Λ₀ = Λ + 1/s + 1/(1-s)` bound as `‖1/s‖ ≤ 1/2` (`‖s‖ ≥ re s = 2`) and
