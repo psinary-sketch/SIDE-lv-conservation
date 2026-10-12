@@ -1,0 +1,100 @@
+# build-module -- a hand-dispatched build of one ref, under (R263)(4).
+# Inputs: the ref to build and the lake target. Steps: checkout at the ref; elan from its official install script, the toolchain pinned by
+# lean-toolchain; lake exe cache get; a free-memory logger beside the build that stops lake if free memory falls beneath the 2,560 MB hold;
+# lake build of the target; a scratch file through lake env lean carrying #print axioms for every named terminal; the build log, the memory log
+# and the axioms output uploaded as the run's artifact. No secret is used; the platform's own token alone (read-only contents).
+name: build-module
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "the commit SHA or branch to build"
+        required: true
+      target:
+        description: "the lake target to build"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    env:
+      HOLD_MB: "2560"
+      TARGET: ${{ inputs.target }}
+    steps:
+      - name: Checkout at the ref
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Refuse a target outside the lake grammar
+        run: |
+          case "$TARGET" in
+            *[!A-Za-z0-9_.\ ]*|"") echo "target refused: $TARGET"; exit 2 ;;
+          esac
+          mkdir -p out
+          git rev-parse HEAD > out/ref.txt
+          cat lean-toolchain >> out/ref.txt
+
+      - name: Install elan (official script; the toolchain from lean-toolchain)
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -o elan-init.sh
+          sh elan-init.sh -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: Mathlib cache
+        run: lake exe cache get 2>&1 | tail -20 > out/cache.log
+
+      - name: Build under the hold
+        run: |
+          (
+            while true; do
+              avail=$(awk '/MemAvailable/ {print int($2/1024)}' /proc/meminfo)
+              echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) avail_mb=$avail" >> out/mem.log
+              if [ "$avail" -lt "$HOLD_MB" ]; then
+                echo "STOP $(date -u +%Y-%m-%dT%H:%M:%SZ) avail_mb=$avail beneath the hold $HOLD_MB" >> out/mem.log
+                pkill -f lake || true
+                pkill -f lean || true
+              fi
+              sleep 5
+            done
+          ) &
+          LOGGER=$!
+          set +e
+          lake build $TARGET > out/build.log 2>&1
+          echo "$?" > out/build_exit.txt
+          kill "$LOGGER" || true
+          awk -F'avail_mb=' '/avail_mb=/ {split($2,a," "); if (min=="" || a[1]+0<min) min=a[1]+0} END {print "LOW " min}' out/mem.log >> out/mem.log
+          exit 0
+
+      - name: Axioms of the named terminals
+        if: always()
+        run: |
+          cat > out/Axioms.lean <<'EOF'
+          import SIDELvConservation.T3_StepNineBridge
+          #print axioms SIDELvConservation.T3.ZeroLoc
+          #print axioms SIDELvConservation.T3.PerClassExcludes
+          #print axioms SIDELvConservation.T3.CombinationsExclude
+          #print axioms SIDELvConservation.T3.T3a_zeroLoc_is_function_of_Phi
+          #print axioms SIDELvConservation.T3.T3b_joint_witness_gives_combinations_exclude
+          #print axioms SIDELvConservation.T3.T3_perClass_to_combinations
+          #print axioms SIDELvConservation.T3.T3prime_shared_witness
+          #print axioms SIDELvConservation.T3.T3doubleprime_general_commutation_fails
+          EOF
+          if [ "$(cat out/build_exit.txt)" = "0" ] && ! grep -q '^STOP ' out/mem.log; then
+            lake env lean out/Axioms.lean > out/axioms.txt 2>&1 || true
+          else
+            echo "NOT RUN: the build did not complete under the hold" > out/axioms.txt
+          fi
+
+      - name: Upload the run's artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-module-${{ github.run_id }}
+          path: out/
+          if-no-files-found: error
