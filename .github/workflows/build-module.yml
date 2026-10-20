@@ -3,6 +3,9 @@
 # lean-toolchain; lake exe cache get; a free-memory logger beside the build that stops lake if free memory falls beneath the 2,560 MB hold;
 # lake build of the target; a scratch file through lake env lean carrying #print axioms for every named terminal; the build log, the memory log
 # and the axioms output uploaded as the run's artifact. No secret is used; the platform's own token alone (read-only contents).
+# From b694 ((R304)(3), in (R302)(3)(a)'s form): where the ref carries CircuitClosure.lean (at the root, imported by no module), a closure step
+# imports each module of the target -- the target's root module where one stands, else every .lean module under the target's directory -- above
+# that file's text and runs it; its out/closure.jsonl.gz -- one record per programme constant -- joins the artifact.
 name: build-module
 
 on:
@@ -89,6 +92,27 @@ jobs:
             lake env lean out/Axioms.lean > out/axioms.txt 2>&1 || true
           else
             echo "NOT RUN: the build did not complete under the hold" > out/axioms.txt
+          fi
+
+      - name: Constant closure of the kernel's own declarations
+        if: always()
+        run: |
+          if [ ! -f CircuitClosure.lean ]; then
+            echo "NOT RUN: no CircuitClosure.lean at the ref" > out/closure_log.txt
+          elif [ "$(cat out/build_exit.txt)" = "0" ] && ! grep -q '^STOP ' out/mem.log; then
+            : > out/Closure.lean
+            for m in $TARGET; do
+              if [ -f "$m.lean" ]; then
+                echo "import $m" >> out/Closure.lean
+              else
+                for f in $(find "$m" -name '*.lean' | sort); do x="${f%.lean}"; echo "import ${x//\//.}" >> out/Closure.lean; done
+              fi
+            done
+            cat CircuitClosure.lean >> out/Closure.lean
+            lake env lean out/Closure.lean > out/closure_log.txt 2>&1 || true
+            if [ -f out/closure.jsonl ]; then gzip -9 -n out/closure.jsonl; fi
+          else
+            echo "NOT RUN: the build did not complete under the hold" > out/closure_log.txt
           fi
 
       - name: Upload the run's artifact
