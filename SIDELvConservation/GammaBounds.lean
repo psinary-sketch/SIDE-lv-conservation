@@ -174,6 +174,7 @@ theorem Gamma_le_two_mul_rpow {a : ℝ} (ha : 1 ≤ a) :
   have hexp_int : MeasureTheory.IntegrableOn (fun t => exp (-t / 2)) (Set.Ioi (0 : ℝ)) := by
     have h := integrableOn_exp_mul_Ioi (a := (-1 / 2 : ℝ)) (by norm_num) 0
     refine h.congr_fun (fun t _ => ?_) measurableSet_Ioi
+    show exp (-1 / 2 * t) = exp (-t / 2)
     rw [show (-1 / 2 : ℝ) * t = -t / 2 by ring]
   have hExpInt : ∫ t in Set.Ioi (0 : ℝ), exp (-t / 2) = 2 := by
     have h := integral_rpow_mul_exp_neg_mul_Ioi (a := (1 : ℝ)) (r := 1 / 2) one_pos (by norm_num)

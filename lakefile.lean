@@ -9,7 +9,7 @@ package sideLvConservation where
 -- Lake cross-dependencies on sister kernels; Mathlib is the sole source
 -- of imported content.
 require mathlib from git
-  "https://github.com/leanprover-community/mathlib4" @ "5e932f97dd25535344f80f9dd8da3aab83df0fe6"
+  "https://github.com/leanprover-community/mathlib4" @ "de5ce8a9a66a4aa68a9bdbb35b63a06d34d9ca11"
 
 @[default_target]
 lean_lib SIDELvConservation where

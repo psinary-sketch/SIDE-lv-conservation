@@ -1,0 +1,146 @@
+# build-module -- a hand-dispatched build of one ref, under (R263)(4).
+# Inputs: the ref to build and the lake target. Steps: checkout at the ref; elan from its official install script, the toolchain pinned by
+# lean-toolchain; lake exe cache get; a free-memory logger beside the build that stops lake if free memory falls beneath the 2,560 MB hold;
+# lake build of the target; a scratch file through lake env lean carrying #print axioms for every named terminal; the build log, the memory log
+# and the axioms output uploaded as the run's artifact. No secret is used; the platform's own token alone (read-only contents).
+# From b658 ((R263)(4), standing): the named terminals are read from print_targets.txt at the kernel's root, one name per line, and the
+# scratch file imports each module of the target; no workflow edit is needed to print a new theorem.
+# From b692 ((R302)(3)(a)): where the ref carries CircuitClosure.lean (at the root, imported by no module), a closure step imports each module
+# of the target above that file's text and runs it; its out/closure.jsonl.gz -- one record per programme constant -- joins the artifact.
+# From b706 ((R316)(5), W-ORD-WORKFLOW-PROBE-STEP): where the ref carries ChainProbe.lean (at the root, imported by no module), a probe step
+# after the print step and before the closure imports each module of the target above that file's text and runs it; its output goes to a
+# SEPARATE artifact (chain-probe-<run id>), so a chain probe needs no scratch branch.
+name: build-module
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "the commit SHA or branch to build"
+        required: true
+      target:
+        description: "the lake target to build"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    env:
+      HOLD_MB: "2560"
+      TARGET: ${{ inputs.target }}
+    steps:
+      - name: Checkout at the ref
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Refuse a target outside the lake grammar
+        run: |
+          case "$TARGET" in
+            *[!A-Za-z0-9_.\ ]*|"") echo "target refused: $TARGET"; exit 2 ;;
+          esac
+          mkdir -p out
+          git rev-parse HEAD > out/ref.txt
+          cat lean-toolchain >> out/ref.txt
+
+      - name: Install elan (official script; the toolchain from lean-toolchain)
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -o elan-init.sh
+          sh elan-init.sh -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: Mathlib cache
+        run: lake exe cache get 2>&1 | tail -20 > out/cache.log
+
+      - name: Build under the hold
+        run: |
+          (
+            while true; do
+              avail=$(awk '/MemAvailable/ {print int($2/1024)}' /proc/meminfo)
+              echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) avail_mb=$avail" >> out/mem.log
+              if [ "$avail" -lt "$HOLD_MB" ]; then
+                echo "STOP $(date -u +%Y-%m-%dT%H:%M:%SZ) avail_mb=$avail beneath the hold $HOLD_MB" >> out/mem.log
+                pkill -f lake || true
+                pkill -f lean || true
+              fi
+              sleep 5
+            done
+          ) &
+          LOGGER=$!
+          set +e
+          lake build $TARGET > out/build.log 2>&1
+          echo "$?" > out/build_exit.txt
+          kill "$LOGGER" || true
+          awk -F'avail_mb=' '/avail_mb=/ {split($2,a," "); if (min=="" || a[1]+0<min) min=a[1]+0} END {print "LOW " min}' out/mem.log >> out/mem.log
+          exit 0
+
+      - name: Axioms of the named terminals
+        if: always()
+        run: |
+          : > out/Axioms.lean
+          for m in $TARGET; do echo "import $m" >> out/Axioms.lean; done
+          cp print_targets.txt out/print_targets.txt
+          while IFS= read -r n || [ -n "$n" ]; do
+            n=$(printf '%s' "$n" | tr -d '\r' | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')
+            [ -z "$n" ] && continue
+            case "$n" in
+              *[!A-Za-z0-9_.\']*) echo "print target refused: $n" >> out/axioms_refused.txt; continue ;;
+            esac
+            echo "#print axioms $n" >> out/Axioms.lean
+          done < print_targets.txt
+          if [ "$(cat out/build_exit.txt)" = "0" ] && ! grep -q '^STOP ' out/mem.log; then
+            lake env lean out/Axioms.lean > out/axioms.txt 2>&1 || true
+          else
+            echo "NOT RUN: the build did not complete under the hold" > out/axioms.txt
+          fi
+
+      - name: Chain probe of the ref's root ChainProbe.lean
+        if: always()
+        run: |
+          mkdir -p probe
+          if [ ! -f ChainProbe.lean ]; then
+            echo "NOT RUN: no ChainProbe.lean at the ref" > probe/chainprobe_log.txt
+          elif [ "$(cat out/build_exit.txt)" = "0" ] && ! grep -q '^STOP ' out/mem.log; then
+            : > probe/ChainProbe.lean
+            for m in $TARGET; do echo "import $m" >> probe/ChainProbe.lean; done
+            cat ChainProbe.lean >> probe/ChainProbe.lean
+            lake env lean probe/ChainProbe.lean > probe/chainprobe.txt 2>&1 || true
+            echo "RUN: ChainProbe.lean at the ref, its print in probe/chainprobe.txt" > probe/chainprobe_log.txt
+          else
+            echo "NOT RUN: the build did not complete under the hold" > probe/chainprobe_log.txt
+          fi
+
+      - name: Constant closure of the kernel's own declarations
+        if: always()
+        run: |
+          if [ ! -f CircuitClosure.lean ]; then
+            echo "NOT RUN: no CircuitClosure.lean at the ref" > out/closure_log.txt
+          elif [ "$(cat out/build_exit.txt)" = "0" ] && ! grep -q '^STOP ' out/mem.log; then
+            : > out/Closure.lean
+            for m in $TARGET; do echo "import $m" >> out/Closure.lean; done
+            cat CircuitClosure.lean >> out/Closure.lean
+            lake env lean out/Closure.lean > out/closure_log.txt 2>&1 || true
+            if [ -f out/closure.jsonl ]; then gzip -9 -n out/closure.jsonl; fi
+          else
+            echo "NOT RUN: the build did not complete under the hold" > out/closure_log.txt
+          fi
+
+      - name: Upload the run's artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-module-${{ github.run_id }}
+          path: out/
+          if-no-files-found: error
+
+      - name: Upload the chain probe's artifact, separate from the run's
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chain-probe-${{ github.run_id }}
+          path: probe/
+          if-no-files-found: ignore
