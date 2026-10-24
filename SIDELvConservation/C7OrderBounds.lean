@@ -274,7 +274,7 @@ theorem exists_norm_completedRiemannZeta₀_le_exp_half :
       (fun t : ℝ => t ^ (w.re - 1) * ‖(hurwitzEvenFEPair 0).f_modif t‖) (Set.Ioi 0) := fun w => by
     have h : MeasureTheory.IntegrableOn
         (fun t : ℝ => ‖(t : ℂ) ^ (w - 1) • (hurwitzEvenFEPair 0).f_modif t‖) (Set.Ioi 0) :=
-      (((hurwitzEvenFEPair 0).toStrongFEPair.hasMellin w).1).norm
+      (((hurwitzEvenFEPair 0).isStrongFEPair_toStrongFEPair.hasMellin w).1).norm
     refine MeasureTheory.IntegrableOn.congr_fun h (fun t ht => ?_) measurableSet_Ioi
     rw [Set.mem_Ioi] at ht
     rw [norm_smul, Complex.norm_cpow_eq_rpow_re_of_pos ht, Complex.sub_re, Complex.one_re]
