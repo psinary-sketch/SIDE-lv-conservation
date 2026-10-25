@@ -209,7 +209,7 @@ theorem exists_norm_completedHurwitzZetaEven₀_le_exp_half (a : UnitAddCircle) 
       (fun t : ℝ => t ^ (w.re - 1) * ‖(hurwitzEvenFEPair a).f_modif t‖) (Ioi 0) := fun w => by
     have h : MeasureTheory.IntegrableOn
         (fun t : ℝ => ‖(t : ℂ) ^ (w - 1) • (hurwitzEvenFEPair a).f_modif t‖) (Ioi 0) :=
-      (((hurwitzEvenFEPair a).toStrongFEPair.hasMellin w).1).norm
+      (((hurwitzEvenFEPair a).isStrongFEPair_toStrongFEPair.hasMellin w).1).norm
     refine MeasureTheory.IntegrableOn.congr_fun h (fun t ht => ?_) measurableSet_Ioi
     rw [Set.mem_Ioi] at ht
     rw [norm_smul, Complex.norm_cpow_eq_rpow_re_of_pos ht, Complex.sub_re, Complex.one_re]
