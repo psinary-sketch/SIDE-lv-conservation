@@ -498,7 +498,7 @@ theorem norm_f_oddPair (a : UnitAddCircle) (t : ℝ) :
 theorem norm_completedHurwitzZetaOdd_le (a : UnitAddCircle) (s : ℂ) :
     ‖completedHurwitzZetaOdd a s‖
       ≤ (∫ t in Ioi (0 : ℝ), t ^ (((s + 1) / 2).re - 1) * |oddKernel a t|) / 2 := by
-  rw [completedHurwitzZetaOdd, StrongFEPair.Λ_eq, norm_div, show ‖(2 : ℂ)‖ = 2 by norm_num]
+  rw [completedHurwitzZetaOdd, (isStrong_hurwitzOddFEPair a).Λ_eq, norm_div, show ‖(2 : ℂ)‖ = 2 by norm_num]
   gcongr
   rw [mellin]
   refine (norm_integral_le_integral_norm _).trans_eq ?_
