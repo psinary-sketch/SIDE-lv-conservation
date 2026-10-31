@@ -36,3 +36,7 @@ Axiom audit: all compiled theorems depend on
 `{propext, Classical.choice, Quot.sound}` only; the single pinned
 declaration additionally carries `sorryAx` and nothing else. No custom
 axioms, no `native_decide`. Full details in `VERIFICATION_TRANSCRIPT.md`.
+
+## AI disclosure
+
+*Computational workflow assisted by various LLM instances. Mathematical content, strategies of argument, and editorial decisions are the author's.*
